@@ -9,12 +9,12 @@ from html.parser import HTMLParser
 from bs4 import BeautifulSoup
 import os
 
-proxy = 'http://10.66.243.130:8080'
-
-os.environ['http_proxy'] = proxy
-os.environ['HTTP_PROXY'] = proxy
-os.environ['https_proxy'] = proxy
-os.environ['HTTPS_PROXY'] = proxy
+# proxy = 'http://10.66.243.130:8080'
+#
+# os.environ['http_proxy'] = proxy
+# os.environ['HTTP_PROXY'] = proxy
+# os.environ['https_proxy'] = proxy
+# os.environ['HTTPS_PROXY'] = proxy
 
 headers = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
@@ -23,33 +23,41 @@ headers = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:81.0) Gecko/20100101 Firefox/81.0",
 }
 
+def TELEX(url):
+    req = requests.get(url, headers).text
+    soup = BeautifulSoup(req, "html.parser")
+    title=soup.find("h1").get_text()
+    top_section=soup.find("p", class_='article__lead').get_text()
+    content=soup.find("div", class_='article-html-content')
+    figures = content.findAllNext("figure")
+    for figure in figures:
+        figure.decompose()
+
+    print(top_section + '\n' + content.get_text())
+    return [title, top_section + '\n' + content.get_text()]
+
 def Huszon4hu(url):
     req = requests.get(url, headers).text
-    soup = BeautifulSoup(req, "html.parser").find("div", {"class": "inner-article_body"})
-    content = soup.find("div", class_='is_content').findChildren("div", recursive=False)[0]
-
+    soup = BeautifulSoup(req, "html.parser").find("div", {"class": "is_content"})
+    content = soup.find("div", class_='o-post__body o-postCnt post-body')
     figures = content.findAllNext("figure")
     for figure in figures:
         figure.decompose()
 
     content.find("div", class_='m-riporter').decompose()
 
-    title=content.find("h1").get_text();
+    title=soup.find("h1").get_text();
 
-
-    # soup.find("div", {"class": "article_head_box"}).decompose()
-    #soup.find("div", {"class": "post_author_box"}).decompose()
-    #soup.find("div", {"class": "post_intro_box"}).decompose()
-    #soup.find("div", {"class": "post_outro_box"}).decompose()
-    #soup.find("div", {"class": "the_tags"}).decompose()
-    #soup.find("div", {"class": "html_banner"}).decompose()
     h3=soup.find("h3")
     if h3 is not None:
         h3.decompose()
     block=soup.find("blockquote", {"class": "embedly-card"})
     if block is not None:
         block.decompose()
-    return [title.get_text(), content.get_text()]
+
+    print(title)
+    print(content.get_text())
+    return [title, content.get_text()]
 
 def NegyNegyNegy(url):
     payload = {
@@ -200,8 +208,9 @@ def MergeWithVideo(index, music):
 
 # Atlatszo('https://atlatszo.hu/kozugy/2022/05/07/cikkunk-utan-3-nappal-elerhetetlenne-valt-az-agressziv-tartalmakat-kozlo-mindenszo/')
 # NegyNegyNegy('https://444.hu/2022/05/09/ugyanolyan-rossz-velemennyel-vannak-a-magyarok-ukrajnarol-mint-oroszorszagrol')
-Huszon4hu('https://24.hu/belfold/2022/05/09/donath-anna-momentum-partelnokseg-terhesseg/')
+# Huszon4hu('https://24.hu/kultura/2022/05/09/dave-gahan-depeche-mode-60-hatvan-eves-heroin-tuladagolas-elvonokura/')
 # NegyNegyNegy('https://444.hu/2022/05/09/a-bekeert-haboruznak-mondta-putyin-a-gyozelem-napjan')
+TELEX('https://telex.hu/sport/2022/05/09/hosszu-katinka-film-bemutato-shane-tusup')
 
     
 ########################
