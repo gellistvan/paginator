@@ -1,12 +1,20 @@
-import selectors
+import re
 import subprocess
 import requests
 import sys
-import html2text
+#import html2text
 import pyttsx3
 from PIL import Image
 from html.parser import HTMLParser
 from bs4 import BeautifulSoup
+import os
+
+proxy = 'http://10.66.243.130:8080'
+
+os.environ['http_proxy'] = proxy
+os.environ['HTTP_PROXY'] = proxy
+os.environ['https_proxy'] = proxy
+os.environ['HTTPS_PROXY'] = proxy
 
 headers = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
@@ -15,8 +23,57 @@ headers = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:81.0) Gecko/20100101 Firefox/81.0",
 }
 
-def Atlatszo(url):
+def Huszon4hu(url):
+    req = requests.get(url, headers).text
+    soup = BeautifulSoup(req, "html.parser").find("div", {"class": "inner-article_body"})
+    content = soup.find("div", class_='is_content').findChildren("div", recursive=False)[0]
 
+    figures = content.findAllNext("figure")
+    for figure in figures:
+        figure.decompose()
+
+    content.find("div", class_='m-riporter').decompose()
+
+    title=content.find("h1").get_text();
+
+
+    # soup.find("div", {"class": "article_head_box"}).decompose()
+    #soup.find("div", {"class": "post_author_box"}).decompose()
+    #soup.find("div", {"class": "post_intro_box"}).decompose()
+    #soup.find("div", {"class": "post_outro_box"}).decompose()
+    #soup.find("div", {"class": "the_tags"}).decompose()
+    #soup.find("div", {"class": "html_banner"}).decompose()
+    h3=soup.find("h3")
+    if h3 is not None:
+        h3.decompose()
+    block=soup.find("blockquote", {"class": "embedly-card"})
+    if block is not None:
+        block.decompose()
+    return [title.get_text(), content.get_text()]
+
+def NegyNegyNegy(url):
+    payload = {
+        'username': 'istvan.gellai@gmail.com',
+        'password': 's2dt39b4'
+    }
+    with requests.Session() as s:
+        p = s.post('https://kor.444.hu/bejelentkezes', data=payload)
+        print (p.text)
+
+        req = s.get(url, headers).text
+        soup = BeautifulSoup(req, "html.parser")
+        title = soup.find("h1")
+        content = soup.find("div", class_='ls eu iP').findChildren("div", recursive=False)[0]
+        figures = content.findAllNext("figure")
+        for figure in figures:
+            figure.decompose()
+          # print(figures)
+        content_text = content.get_text()
+        content_text = re.sub(r'[\n\n]+', r'\n', content_text, re.MULTILINE)
+        print(content_text)
+        return [title.get_text(), content.get_text()]
+
+def Atlatszo(url):
     req = requests.get(url, headers).text
     soup = BeautifulSoup(req, "html.parser").find("div", {"class": "inner-article_body"})
     title=soup.find("h1")
@@ -33,7 +90,6 @@ def Atlatszo(url):
     block=soup.find("blockquote", {"class": "embedly-card"})
     if block is not None:
         block.decompose()
-
     return [title.get_text(), content.get_text()]
 
 
@@ -139,9 +195,13 @@ def MergeWithVideo(index, music):
     subprocess.call(command)
     
     #AppendtoFile('list.txt' 'file \'' + name + '.mp4\'\n')
-    
-    
 
+
+
+# Atlatszo('https://atlatszo.hu/kozugy/2022/05/07/cikkunk-utan-3-nappal-elerhetetlenne-valt-az-agressziv-tartalmakat-kozlo-mindenszo/')
+# NegyNegyNegy('https://444.hu/2022/05/09/ugyanolyan-rossz-velemennyel-vannak-a-magyarok-ukrajnarol-mint-oroszorszagrol')
+Huszon4hu('https://24.hu/belfold/2022/05/09/donath-anna-momentum-partelnokseg-terhesseg/')
+# NegyNegyNegy('https://444.hu/2022/05/09/a-bekeert-haboruznak-mondta-putyin-a-gyozelem-napjan')
 
     
 ########################
@@ -166,5 +226,5 @@ for line in Lines:
 
 
 
-#Atlatszo('https://atlatszo.hu/kozugy/2022/05/07/cikkunk-utan-3-nappal-elerhetetlenne-valt-az-agressziv-tartalmakat-kozlo-mindenszo/')
+Atlatszo('https://atlatszo.hu/kozugy/2022/05/07/cikkunk-utan-3-nappal-elerhetetlenne-valt-az-agressziv-tartalmakat-kozlo-mindenszo/')
 #Atlatszo('https://atlatszo.hu/kozugy/2022/05/04/esztergomi-szoftverfejlesztot-talaltunk-egy-agressziv-alhiroldal-mogott/')
