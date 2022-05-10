@@ -33,6 +33,38 @@ def RemoveAll(parent, object, classes = ''):
         for item in container:
             item.decompose()
 
+def LAKMUSZ(url):
+    req = requests.get(url, headers).text
+    soup = BeautifulSoup(req, "html.parser")
+    title=soup.find("h1").get_text()
+    content=soup.find("div", class_='cp_content')
+    RemoveAll(content, "figure")
+    for item in content.find("img").find_all_next("br"):
+        item.decompose()
+    for item in content.find("img").find_all_next("span"):
+        item.decompose()
+        # for par in item.find_next("span"):
+        #     par.decompose()
+
+    print(title)
+    print(content.get_text())
+    # return [title, content.get_text()]
+
+def INDEX(url):
+    req = requests.get(url, headers).text
+    soup = BeautifulSoup(req, "html.parser")
+    title=soup.find("h1").get_text()
+    lead=soup.find("div", class_="lead").get_text();
+    content=soup.find("div", class_='cikk-torzs')
+    RemoveAll(content, "figure")
+    RemoveAll(content, "div", 'miniapp')
+    RemoveAll(content, "div", 'indavideo')
+    RemoveAll(content, "div", 'meta-twitter')
+
+    print(title)
+    print(content.get_text())
+    return [title, lead + "/n" + content.get_text()]
+
 def QUBIT(url):
     req = requests.get(url, headers).text
     soup = BeautifulSoup(req, "html.parser")
@@ -48,7 +80,7 @@ def QUBIT(url):
 
     print(title)
     print(content.get_text())
-    # return [title, content.get_text()]
+    return [title, content.get_text()]
 
 def JELEN(url):
     req = requests.get(url, headers).text
@@ -355,7 +387,9 @@ def MergeWithVideo(index, music):
 # VALASZ('https://www.valaszonline.hu/2022/05/10/gondosora-4ig-szocialis-gondozas-valasztas-nyugdijasok/')
 # HVG('https://hvg.hu/itthon/20220510_hospice_otthonapolas_finanszirozas_riport')
 # JELEN('https://jelen.media/vilag/reformehes-unio-3186')
-QUBIT('https://qubit.hu/2022/05/10/pusztan-azzal-hogy-vega-vagy-meg-nem-mented-meg-a-foldet-de-az-irany-jo')
+# QUBIT('https://qubit.hu/2022/05/10/pusztan-azzal-hogy-vega-vagy-meg-nem-mented-meg-a-foldet-de-az-irany-jo')
+# INDEX('https://index.hu/kulfold/2022/05/10/98-eves-anyoka-mesterlovesznek-jelentkezett-az-ukran-hadseregbe/')
+LAKMUSZ('https://www.lakmusz.hu/tobb-ezren-terjesztik-hogy-a-masodik-vilaghaboruban-az-ukran-hadsereg-szallta-meg-magyarorszagot-de-ez-nem-igaz/')
 ########################
 
 file1 = open(sys.argv[1], 'r')
