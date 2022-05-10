@@ -9,12 +9,12 @@ from html.parser import HTMLParser
 from bs4 import BeautifulSoup
 import os
 
-# proxy = 'http://10.66.243.130:8080'
-#
-# os.environ['http_proxy'] = proxy
-# os.environ['HTTP_PROXY'] = proxy
-# os.environ['https_proxy'] = proxy
-# os.environ['HTTPS_PROXY'] = proxy
+proxy = 'http://10.66.243.130:8080'
+
+os.environ['http_proxy'] = proxy
+os.environ['HTTP_PROXY'] = proxy
+os.environ['https_proxy'] = proxy
+os.environ['HTTPS_PROXY'] = proxy
 
 headers = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
@@ -23,42 +23,67 @@ headers = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:81.0) Gecko/20100101 Firefox/81.0",
 }
 
+def RemoveAll(parent, object, classes = ''):
+    if classes != '' :
+        container=parent.findAllNext(object, class_=classes)
+        for item in container:
+            item.decompose()
+    else :
+        container=parent.findAllNext(object)
+        for item in container:
+            item.decompose()
+
+def VALASZ(url):
+    req = requests.get(url, headers).text
+    soup = BeautifulSoup(req, "html.parser")
+    title=soup.find("h1").get_text()
+    content=soup.find("article")
+    RemoveAll(content, "div", 'hird-ferd-cont')
+    RemoveAll(content, "div", 'hird-cont')
+    RemoveAll(content, "footer")
+    RemoveAll(content, "figure")
+    RemoveAll(content, "h2")
+
+    print(title)
+    print(content.get_text())
+    return [title, content.get_text()]
+
+def VG(url):
+    req = requests.get(url, headers).text
+    soup = BeautifulSoup(req, "html.parser")
+    title=soup.find("h1").get_text()
+    lead=soup.find("div", class_="article-desc").get_text()
+    content=soup.find("app-article-text")
+    RemoveAll(content, "figure")
+
+    print(title)
+    print(content.get_text())
+    return [title, lead + "\n" + content.get_text()]
+
 def HANG(url):
     req = requests.get(url, headers).text
     soup = BeautifulSoup(req, "html.parser")
     title=soup.find("h1").get_text()
     content=soup.find("div", class_='entry-content')
-    #felhivasok = content.findAllNext("div", class_='felhivas')
-    #for frame in felhivasok:
-    #    frame.decompose()
-    #
-    widgets = content.findAllNext("figure")
-    for figure in widgets:
-        figure.decompose()
-    widgets = content.findAllNext("div", class_='widget')
-    for figure in widgets:
-        figure.decompose()
-    widgets = content.findAllNext("div", class_='cikkblock')
-    for figure in widgets:
-        figure.decompose()
-    #
+
+    RemoveAll(content, "div", "banner-wrapper")
+    RemoveAll(content, "div", "widget")
+    RemoveAll(content, "div", "cikkblock")
+    RemoveAll(content, "figure")
+
     print(title)
     print(content.get_text())
-  #  return [title, content.get_text()]
-  
+    return [title, content.get_text()]
+
   
 def D36(url):
     req = requests.get(url, headers).text
     soup = BeautifulSoup(req, "html.parser")
     title=soup.find("h1").get_text()
     content=soup.find("div", class_='entry-content')
-    felhivasok = content.findAllNext("div", class_='felhivas')
-    for frame in felhivasok:
-        frame.decompose()
 
-    figures = content.findAllNext("figure")
-    for figure in figures:
-        figure.decompose()
+    RemoveAll(content, "div", classes='felhivas')
+    RemoveAll(content, "figure")
 
     print(title)
     print(content.get_text())
@@ -285,8 +310,9 @@ def MergeWithVideo(index, music):
 # PORTFOLIO('https://www.portfolio.hu/befektetes/20220509/majdnem-annyi-penz-folyt-ki-allampapirokbol-amennyit-reszvenyekbe-ontottek-a-magyarok-mi-folyik-itt-543745')
 # D36('https://www.direkt36.hu/nagyon-megszaladtak-a-koltsegei-az-mnb-uj-presztizsberuhazasanak-amelyet-matolcsy-fianak-baratja-kapott/')
 # D36('https://www.direkt36.hu/putyin-hekkerei-is-latjak-a-magyar-kulugy-titkait-az-orban-kormany-evek-ota-nem-birja-elharitani-oket/')
-HANG('https://hang.hu/belfold/novak-katalin-holnap-atveszem-magyarorszag-koztarsasagi-elnoki-tisztseget-140481')
-
+# HANG('https://hang.hu/belfold/novak-katalin-holnap-atveszem-magyarorszag-koztarsasagi-elnoki-tisztseget-140481')
+# VG('https://www.vg.hu/vilaggazdasag-magyar-gazdasag/2022/05/ez-mar-a-haboru-hatasa-elszalltak-az-arak-magyarorszagon')
+VALASZ('https://www.valaszonline.hu/2022/05/10/gondosora-4ig-szocialis-gondozas-valasztas-nyugdijasok/')
 ########################
 
 file1 = open(sys.argv[1], 'r')
