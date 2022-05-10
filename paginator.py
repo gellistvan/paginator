@@ -33,6 +33,34 @@ def RemoveAll(parent, object, classes = ''):
         for item in container:
             item.decompose()
 
+def QUBIT(url):
+    req = requests.get(url, headers).text
+    soup = BeautifulSoup(req, "html.parser")
+    title=soup.find("h1").get_text()
+    content=soup.find("div", class_='post__content')
+    RemoveAll(content, "div", 'post__authors')
+    RemoveAll(content, "div", 'donation-line-fz3')
+    RemoveAll(content, "figure")
+    RemoveAll(content, "div", 'donation-box-gd5')
+    paragrapsh=content.findAll("i")
+    if 0 < len(paragrapsh) :
+        paragrapsh[-1].decompose()
+
+    print(title)
+    print(content.get_text())
+    # return [title, content.get_text()]
+
+def JELEN(url):
+    req = requests.get(url, headers).text
+    soup = BeautifulSoup(req, "html.parser")
+    title=soup.find("h1").get_text()
+    content=soup.find("div", class_='content')
+    RemoveAll(content, "div", 'cikkblock')
+
+    print(title)
+    print(content.get_text())
+    return [title, content.get_text()]
+
 def HVG(url):
     req = requests.get(url, headers).text
     soup = BeautifulSoup(req, "html.parser")
@@ -325,7 +353,9 @@ def MergeWithVideo(index, music):
 # HANG('https://hang.hu/belfold/novak-katalin-holnap-atveszem-magyarorszag-koztarsasagi-elnoki-tisztseget-140481')
 # VG('https://www.vg.hu/vilaggazdasag-magyar-gazdasag/2022/05/ez-mar-a-haboru-hatasa-elszalltak-az-arak-magyarorszagon')
 # VALASZ('https://www.valaszonline.hu/2022/05/10/gondosora-4ig-szocialis-gondozas-valasztas-nyugdijasok/')
-HVG('https://hvg.hu/itthon/20220510_hospice_otthonapolas_finanszirozas_riport')
+# HVG('https://hvg.hu/itthon/20220510_hospice_otthonapolas_finanszirozas_riport')
+# JELEN('https://jelen.media/vilag/reformehes-unio-3186')
+QUBIT('https://qubit.hu/2022/05/10/pusztan-azzal-hogy-vega-vagy-meg-nem-mented-meg-a-foldet-de-az-irany-jo')
 ########################
 
 file1 = open(sys.argv[1], 'r')
