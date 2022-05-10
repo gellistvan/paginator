@@ -247,7 +247,7 @@ def Huszon4hu(url):
     for figure in figures:
         figure.decompose()
 
-    content.find("div", class_='m-riporter').decompose()
+    RemoveAll(content, "div", 'm-riporter')
 
     title=soup.find("h1").get_text();
 
@@ -263,26 +263,18 @@ def Huszon4hu(url):
     return [title, content.get_text()]
 
 def NegyNegyNegy(url):
-    payload = {
-        'username': 'istvan.gellai@gmail.com',
-        'password': 's2dt39b4'
-    }
-    with requests.Session() as s:
-        p = s.post('https://kor.444.hu/bejelentkezes', data=payload)
-        print (p.text)
-
-        req = s.get(url, headers).text
-        soup = BeautifulSoup(req, "html.parser")
-        title = soup.find("h1")
-        content = soup.find("div", class_='ls eu iP').findChildren("div", recursive=False)[0]
-        figures = content.findAllNext("figure")
-        for figure in figures:
-            figure.decompose()
-          # print(figures)
-        content_text = content.get_text()
-        content_text = re.sub(r'[\n\n]+', r'\n', content_text, re.MULTILINE)
-        print(content_text)
-        return [title.get_text(), content.get_text()]
+    req = requests.get(url, headers).text
+    soup = BeautifulSoup(req, "html.parser")
+    title = soup.find("h1")
+    content = soup.find("div", class_='ls eu iP').findChildren("div", recursive=False)[0]
+    figures = content.findAllNext("figure")
+    for figure in figures:
+        figure.decompose()
+      # print(figures)
+    content_text = content.get_text()
+    content_text = re.sub(r'[\n\n]+', r'\n', content_text, re.MULTILINE)
+    print(content_text)
+    return [title.get_text(), content.get_text()]
 
 def Atlatszo(url):
     req = requests.get(url, headers).text
@@ -366,17 +358,65 @@ def HandleArticle(url, index, speaker):
     title=''
     content=''
     name=format(index, '02d')
-    if ('atlatszo.hu' in url):
+
+    if 'atlatszo.hu' in url:
         [title, content] = Atlatszo(url)
+
+    elif '24.hu' in url:
+        [title, content] = Huszon4hu(url)
+
+    elif '444.hu' in url:
+        [title, content] = NegyNegyNegy(url)
+
+    elif 'telex.hu' in url:
+        [title, content] = TELEX(url)
+
+    elif 'g7.hu' in url:
+        [title, content] = G7(url)
+
+    elif 'portfolio.hu' in url:
+        [title, content] = PORTFOLIO(url)
+
+    elif 'direkt36.hu' in url:
+        [title, content] = D36(url)
+
+    elif 'hang.hu' in url:
+        [title, content] = HANG(url)
+
+    elif 'valaszonline' in url:
+        [title, content] = VALASZ(url)
+
+    elif 'hvg.hu' in url:
+        [title, content] = HVG(url)
+
+    elif 'vg.hu' in url:
+        [title, content] = VG(url)
+
+    elif 'en.media' in url:
+        [title, content] = JELEN(url)
+
+    elif 'bit.hu' in url:
+        [title, content] = QUBIT(url)
+
+    elif 'index.hu' in url:
+        [title, content] = INDEX(url)
+
+    elif 'lakmusz' in url:
+        [title, content] = LAKMUSZ(url)
+
+    elif 'nepszava.hu' in url:
+        [title, content] = NEPSZAVA(url)
+
     else:
+        print("Unknown site")
         return 0
 
     AppendtoFile('desc.txt', title)
     AppendtoFile('source.txt', url)
-    
+
     article_file = open(name + '.txt', 'w')
     article_file.write(title + '\n' + content + '\n')
-    
+
     speaker.save_to_file(title + '\n' + content, name + '.mp3')
     speaker.runAndWait()
     
@@ -409,31 +449,34 @@ def MergeWithVideo(index, music):
 
 
 
-# Atlatszo('https://atlatszo.hu/kozugy/2022/05/07/cikkunk-utan-3-nappal-elerhetetlenne-valt-az-agressziv-tartalmakat-kozlo-mindenszo/')
-# NegyNegyNegy('https://444.hu/2022/05/09/ugyanolyan-rossz-velemennyel-vannak-a-magyarok-ukrajnarol-mint-oroszorszagrol')
-# Huszon4hu('https://24.hu/kultura/2022/05/09/dave-gahan-depeche-mode-60-hatvan-eves-heroin-tuladagolas-elvonokura/')
-# NegyNegyNegy('https://444.hu/2022/05/09/a-bekeert-haboruznak-mondta-putyin-a-gyozelem-napjan')
-# TELEX('https://telex.hu/sport/2022/05/09/hosszu-katinka-film-bemutato-shane-tusup')
-# G7('https://g7.hu/adat/20220503/ha-tovabbra-is-igy-futunk-abbol-nem-lesz-energiafuggetlenseg/')
-# PORTFOLIO('https://www.portfolio.hu/befektetes/20220509/majdnem-annyi-penz-folyt-ki-allampapirokbol-amennyit-reszvenyekbe-ontottek-a-magyarok-mi-folyik-itt-543745')
-# D36('https://www.direkt36.hu/nagyon-megszaladtak-a-koltsegei-az-mnb-uj-presztizsberuhazasanak-amelyet-matolcsy-fianak-baratja-kapott/')
-# D36('https://www.direkt36.hu/putyin-hekkerei-is-latjak-a-magyar-kulugy-titkait-az-orban-kormany-evek-ota-nem-birja-elharitani-oket/')
-# HANG('https://hang.hu/belfold/novak-katalin-holnap-atveszem-magyarorszag-koztarsasagi-elnoki-tisztseget-140481')
-# VG('https://www.vg.hu/vilaggazdasag-magyar-gazdasag/2022/05/ez-mar-a-haboru-hatasa-elszalltak-az-arak-magyarorszagon')
-# VALASZ('https://www.valaszonline.hu/2022/05/10/gondosora-4ig-szocialis-gondozas-valasztas-nyugdijasok/')
-# HVG('https://hvg.hu/itthon/20220510_hospice_otthonapolas_finanszirozas_riport')
-# JELEN('https://jelen.media/vilag/reformehes-unio-3186')
-# QUBIT('https://qubit.hu/2022/05/10/pusztan-azzal-hogy-vega-vagy-meg-nem-mented-meg-a-foldet-de-az-irany-jo')
-# INDEX('https://index.hu/kulfold/2022/05/10/98-eves-anyoka-mesterlovesznek-jelentkezett-az-ukran-hadseregbe/')
-# LAKMUSZ('https://www.lakmusz.hu/tobb-ezren-terjesztik-hogy-a-masodik-vilaghaboruban-az-ukran-hadsereg-szallta-meg-magyarorszagot-de-ez-nem-igaz/')
-NEPSZAVA('https://nepszava.hu/3156332_gyilkossag-hetes-ongyilkossag-riport')
 ########################
+
+
+
+speaker=init_speaker()
+
+# HandleArticle('https://atlatszo.hu/kozugy/2022/05/07/cikkunk-utan-3-nappal-elerhetetlenne-valt-az-agressziv-tartalmakat-kozlo-mindenszo/', 1, speaker)
+# HandleArticle('https://444.hu/2022/05/09/ugyanolyan-rossz-velemennyel-vannak-a-magyarok-ukrajnarol-mint-oroszorszagrol', 1, speaker)
+# HandleArticle('https://24.hu/kultura/2022/05/09/dave-gahan-depeche-mode-60-hatvan-eves-heroin-tuladagolas-elvonokura/', 1, speaker)
+# HandleArticle('https://444.hu/2022/05/09/a-bekeert-haboruznak-mondta-putyin-a-gyozelem-napjan', 1, speaker)
+# HandleArticle('https://telex.hu/sport/2022/05/09/hosszu-katinka-film-bemutato-shane-tusup', 1, speaker)
+# HandleArticle('https://g7.hu/adat/20220503/ha-tovabbra-is-igy-futunk-abbol-nem-lesz-energiafuggetlenseg/', 1, speaker)
+# HandleArticle('https://www.portfolio.hu/befektetes/20220509/majdnem-annyi-penz-folyt-ki-allampapirokbol-amennyit-reszvenyekbe-ontottek-a-magyarok-mi-folyik-itt-543745', 1, speaker)
+# HandleArticle('https://www.direkt36.hu/nagyon-megszaladtak-a-koltsegei-az-mnb-uj-presztizsberuhazasanak-amelyet-matolcsy-fianak-baratja-kapott/', 1, speaker)
+# HandleArticle('https://www.direkt36.hu/putyin-hekkerei-is-latjak-a-magyar-kulugy-titkait-az-orban-kormany-evek-ota-nem-birja-elharitani-oket/', 1, speaker)
+# HandleArticle('https://hang.hu/belfold/novak-katalin-holnap-atveszem-magyarorszag-koztarsasagi-elnoki-tisztseget-140481', 1, speaker)
+# HandleArticle('https://www.vg.hu/vilaggazdasag-magyar-gazdasag/2022/05/ez-mar-a-haboru-hatasa-elszalltak-az-arak-magyarorszagon', 1, speaker)
+# HandleArticle('https://www.valaszonline.hu/2022/05/10/gondosora-4ig-szocialis-gondozas-valasztas-nyugdijasok/', 1, speaker)
+# HandleArticle('https://hvg.hu/itthon/20220510_hospice_otthonapolas_finanszirozas_riport', 1, speaker)
+# HandleArticle('https://jelen.media/vilag/reformehes-unio-3186', 1, speaker)
+# HandleArticle('https://qubit.hu/2022/05/10/pusztan-azzal-hogy-vega-vagy-meg-nem-mented-meg-a-foldet-de-az-irany-jo', 1, speaker)
+# HandleArticle('https://index.hu/kulfold/2022/05/10/98-eves-anyoka-mesterlovesznek-jelentkezett-az-ukran-hadseregbe/', 1, speaker)
+# HandleArticle('https://www.lakmusz.hu/tobb-ezren-terjesztik-hogy-a-masodik-vilaghaboruban-az-ukran-hadsereg-szallta-meg-magyarorszagot-de-ez-nem-igaz/', 1, speaker)
+# HandleArticle('https://nepszava.hu/3156332_gyilkossag-hetes-ongyilkossag-riport', 1, speaker)
 
 file1 = open(sys.argv[1], 'r')
 Lines = file1.readlines()
 count = 0
-
-speaker=init_speaker()
 
 skip=False
 for line in Lines:
@@ -444,10 +487,3 @@ for line in Lines:
     elif (not skip):
         HandleImage(line.strip(), int(count /2))
         MergeWithVideo(int(count /2), sys.argv[2])
-    
-
-
-
-
-#Atlatszo('https://atlatszo.hu/kozugy/2022/05/07/cikkunk-utan-3-nappal-elerhetetlenne-valt-az-agressziv-tartalmakat-kozlo-mindenszo/')
-#Atlatszo('https://atlatszo.hu/kozugy/2022/05/04/esztergomi-szoftverfejlesztot-talaltunk-egy-agressziv-alhiroldal-mogott/')
