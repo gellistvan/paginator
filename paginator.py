@@ -23,6 +23,34 @@ headers = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:81.0) Gecko/20100101 Firefox/81.0",
 }
 
+def D36(url):
+    req = requests.get(url, headers).text
+    soup = BeautifulSoup(req, "html.parser")
+    title=soup.find("h1").get_text()
+    content=soup.find("div", class_='entry-content')
+    felhivasok = content.findAllNext("div", class_='felhivas')
+    for frame in felhivasok:
+        frame.decompose()
+
+    figures = content.findAllNext("figure")
+    for figure in figures:
+        figure.decompose()
+
+    print(title)
+    print(content.get_text())
+  #  return [title, content.get_text()]
+
+def PORTFOLIO(url):
+    req = requests.get(url, headers).text
+    soup = BeautifulSoup(req, "html.parser")
+    title=soup.find("h1").get_text()
+    content=soup.find("article")
+    content.find("ul", class_='tags').decompose()
+
+    print(title)
+    print(content.get_text())
+    return [title, content.get_text()]
+
 def G7(url):
     req = requests.get(url, headers).text
     soup = BeautifulSoup(req, "html.parser")
@@ -229,8 +257,10 @@ def MergeWithVideo(index, music):
 # Huszon4hu('https://24.hu/kultura/2022/05/09/dave-gahan-depeche-mode-60-hatvan-eves-heroin-tuladagolas-elvonokura/')
 # NegyNegyNegy('https://444.hu/2022/05/09/a-bekeert-haboruznak-mondta-putyin-a-gyozelem-napjan')
 # TELEX('https://telex.hu/sport/2022/05/09/hosszu-katinka-film-bemutato-shane-tusup')
-G7('https://g7.hu/adat/20220503/ha-tovabbra-is-igy-futunk-abbol-nem-lesz-energiafuggetlenseg/')
-
+# G7('https://g7.hu/adat/20220503/ha-tovabbra-is-igy-futunk-abbol-nem-lesz-energiafuggetlenseg/')
+# PORTFOLIO('https://www.portfolio.hu/befektetes/20220509/majdnem-annyi-penz-folyt-ki-allampapirokbol-amennyit-reszvenyekbe-ontottek-a-magyarok-mi-folyik-itt-543745')
+D36('https://www.direkt36.hu/nagyon-megszaladtak-a-koltsegei-az-mnb-uj-presztizsberuhazasanak-amelyet-matolcsy-fianak-baratja-kapott/')
+# D36('https://www.direkt36.hu/putyin-hekkerei-is-latjak-a-magyar-kulugy-titkait-az-orban-kormany-evek-ota-nem-birja-elharitani-oket/')
 ########################
 
 file1 = open(sys.argv[1], 'r')
