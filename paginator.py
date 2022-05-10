@@ -33,6 +33,18 @@ def RemoveAll(parent, object, classes = ''):
         for item in container:
             item.decompose()
 
+def HVG(url):
+    req = requests.get(url, headers).text
+    soup = BeautifulSoup(req, "html.parser")
+    title=soup.find("h1").get_text()
+    lead=soup.find("div", class_='article-lead entry-summary').get_text()
+    content=soup.find("div", class_='article-content entry-content')
+    RemoveAll(content, "figure")
+
+    print(title)
+    print(content.get_text())
+    return [title, lead + "\n" + content.get_text()]
+
 def VALASZ(url):
     req = requests.get(url, headers).text
     soup = BeautifulSoup(req, "html.parser")
@@ -312,7 +324,8 @@ def MergeWithVideo(index, music):
 # D36('https://www.direkt36.hu/putyin-hekkerei-is-latjak-a-magyar-kulugy-titkait-az-orban-kormany-evek-ota-nem-birja-elharitani-oket/')
 # HANG('https://hang.hu/belfold/novak-katalin-holnap-atveszem-magyarorszag-koztarsasagi-elnoki-tisztseget-140481')
 # VG('https://www.vg.hu/vilaggazdasag-magyar-gazdasag/2022/05/ez-mar-a-haboru-hatasa-elszalltak-az-arak-magyarorszagon')
-VALASZ('https://www.valaszonline.hu/2022/05/10/gondosora-4ig-szocialis-gondozas-valasztas-nyugdijasok/')
+# VALASZ('https://www.valaszonline.hu/2022/05/10/gondosora-4ig-szocialis-gondozas-valasztas-nyugdijasok/')
+HVG('https://hvg.hu/itthon/20220510_hospice_otthonapolas_finanszirozas_riport')
 ########################
 
 file1 = open(sys.argv[1], 'r')
