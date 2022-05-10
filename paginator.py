@@ -23,6 +23,24 @@ headers = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:81.0) Gecko/20100101 Firefox/81.0",
 }
 
+def G7(url):
+    req = requests.get(url, headers).text
+    soup = BeautifulSoup(req, "html.parser")
+    title=soup.find("h1").get_text()
+    content=soup.find("div", class_='content')
+    content.find("div", class_='donate__articleBox -donateArticleBox _ce_measure_widget').decompose()
+    content.find("div", class_='fb-share-button').decompose()
+    content.find("p", class_='buttons-container _ce_measure_widget').decompose()
+
+    frames = content.findAllNext("iframe")
+    for frame in frames:
+        frame.decompose()
+
+
+    print(title)
+    print(content.get_text())
+    return [title, content.get_text()]
+
 def TELEX(url):
     req = requests.get(url, headers).text
     soup = BeautifulSoup(req, "html.parser")
@@ -210,9 +228,9 @@ def MergeWithVideo(index, music):
 # NegyNegyNegy('https://444.hu/2022/05/09/ugyanolyan-rossz-velemennyel-vannak-a-magyarok-ukrajnarol-mint-oroszorszagrol')
 # Huszon4hu('https://24.hu/kultura/2022/05/09/dave-gahan-depeche-mode-60-hatvan-eves-heroin-tuladagolas-elvonokura/')
 # NegyNegyNegy('https://444.hu/2022/05/09/a-bekeert-haboruznak-mondta-putyin-a-gyozelem-napjan')
-TELEX('https://telex.hu/sport/2022/05/09/hosszu-katinka-film-bemutato-shane-tusup')
+# TELEX('https://telex.hu/sport/2022/05/09/hosszu-katinka-film-bemutato-shane-tusup')
+G7('https://g7.hu/adat/20220503/ha-tovabbra-is-igy-futunk-abbol-nem-lesz-energiafuggetlenseg/')
 
-    
 ########################
 
 file1 = open(sys.argv[1], 'r')
@@ -235,5 +253,5 @@ for line in Lines:
 
 
 
-Atlatszo('https://atlatszo.hu/kozugy/2022/05/07/cikkunk-utan-3-nappal-elerhetetlenne-valt-az-agressziv-tartalmakat-kozlo-mindenszo/')
+#Atlatszo('https://atlatszo.hu/kozugy/2022/05/07/cikkunk-utan-3-nappal-elerhetetlenne-valt-az-agressziv-tartalmakat-kozlo-mindenszo/')
 #Atlatszo('https://atlatszo.hu/kozugy/2022/05/04/esztergomi-szoftverfejlesztot-talaltunk-egy-agressziv-alhiroldal-mogott/')
