@@ -23,6 +23,30 @@ headers = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:81.0) Gecko/20100101 Firefox/81.0",
 }
 
+def HANG(url):
+    req = requests.get(url, headers).text
+    soup = BeautifulSoup(req, "html.parser")
+    title=soup.find("h1").get_text()
+    content=soup.find("div", class_='entry-content')
+    #felhivasok = content.findAllNext("div", class_='felhivas')
+    #for frame in felhivasok:
+    #    frame.decompose()
+    #
+    widgets = content.findAllNext("figure")
+    for figure in widgets:
+        figure.decompose()
+    widgets = content.findAllNext("div", class_='widget')
+    for figure in widgets:
+        figure.decompose()
+    widgets = content.findAllNext("div", class_='cikkblock')
+    for figure in widgets:
+        figure.decompose()
+    #
+    print(title)
+    print(content.get_text())
+  #  return [title, content.get_text()]
+  
+  
 def D36(url):
     req = requests.get(url, headers).text
     soup = BeautifulSoup(req, "html.parser")
@@ -38,7 +62,7 @@ def D36(url):
 
     print(title)
     print(content.get_text())
-  #  return [title, content.get_text()]
+    return [title, content.get_text()]
 
 def PORTFOLIO(url):
     req = requests.get(url, headers).text
@@ -259,8 +283,10 @@ def MergeWithVideo(index, music):
 # TELEX('https://telex.hu/sport/2022/05/09/hosszu-katinka-film-bemutato-shane-tusup')
 # G7('https://g7.hu/adat/20220503/ha-tovabbra-is-igy-futunk-abbol-nem-lesz-energiafuggetlenseg/')
 # PORTFOLIO('https://www.portfolio.hu/befektetes/20220509/majdnem-annyi-penz-folyt-ki-allampapirokbol-amennyit-reszvenyekbe-ontottek-a-magyarok-mi-folyik-itt-543745')
-D36('https://www.direkt36.hu/nagyon-megszaladtak-a-koltsegei-az-mnb-uj-presztizsberuhazasanak-amelyet-matolcsy-fianak-baratja-kapott/')
+# D36('https://www.direkt36.hu/nagyon-megszaladtak-a-koltsegei-az-mnb-uj-presztizsberuhazasanak-amelyet-matolcsy-fianak-baratja-kapott/')
 # D36('https://www.direkt36.hu/putyin-hekkerei-is-latjak-a-magyar-kulugy-titkait-az-orban-kormany-evek-ota-nem-birja-elharitani-oket/')
+HANG('https://hang.hu/belfold/novak-katalin-holnap-atveszem-magyarorszag-koztarsasagi-elnoki-tisztseget-140481')
+
 ########################
 
 file1 = open(sys.argv[1], 'r')
