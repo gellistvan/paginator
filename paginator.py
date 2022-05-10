@@ -1,3 +1,4 @@
+import json
 import re
 import subprocess
 import requests
@@ -33,6 +34,43 @@ def RemoveAll(parent, object, classes = ''):
         for item in container:
             item.decompose()
 
+def ParseItem(object):
+    temp = ""
+    if type(object) is dict :
+        if 'Txt' in object:
+            return object['Txt']
+    elif type(object) is list :
+        for tag in object:
+            temp += ParseItem(tag)
+    else :
+        return ""
+    return temp
+
+
+def NEPSZAVA(url):
+    name=url.split("/")[-1]
+    req = requests.get("https://nepszava.hu/json/cikk.json?id=" + name, headers).text
+    parsed = json.loads(req)
+    title = ""
+    content = ""
+
+    for obj in parsed:
+        if obj == "title":
+            title = parsed[obj]
+        if obj == "lead":
+            content += parsed[obj]
+        elif obj=="content": # list
+            tags = parsed[obj]
+            for tag in tags:
+                content += ParseItem(tag)
+
+    soup = BeautifulSoup(content, "html.parser")
+
+    print(title)
+    print (soup.get_text())
+
+    return [title, soup.get_text()]
+
 def LAKMUSZ(url):
     req = requests.get(url, headers).text
     soup = BeautifulSoup(req, "html.parser")
@@ -43,12 +81,10 @@ def LAKMUSZ(url):
         item.decompose()
     for item in content.find("img").find_all_next("span"):
         item.decompose()
-        # for par in item.find_next("span"):
-        #     par.decompose()
 
     print(title)
     print(content.get_text())
-    # return [title, content.get_text()]
+    return [title, content.get_text()]
 
 def INDEX(url):
     req = requests.get(url, headers).text
@@ -389,7 +425,8 @@ def MergeWithVideo(index, music):
 # JELEN('https://jelen.media/vilag/reformehes-unio-3186')
 # QUBIT('https://qubit.hu/2022/05/10/pusztan-azzal-hogy-vega-vagy-meg-nem-mented-meg-a-foldet-de-az-irany-jo')
 # INDEX('https://index.hu/kulfold/2022/05/10/98-eves-anyoka-mesterlovesznek-jelentkezett-az-ukran-hadseregbe/')
-LAKMUSZ('https://www.lakmusz.hu/tobb-ezren-terjesztik-hogy-a-masodik-vilaghaboruban-az-ukran-hadsereg-szallta-meg-magyarorszagot-de-ez-nem-igaz/')
+# LAKMUSZ('https://www.lakmusz.hu/tobb-ezren-terjesztik-hogy-a-masodik-vilaghaboruban-az-ukran-hadsereg-szallta-meg-magyarorszagot-de-ez-nem-igaz/')
+NEPSZAVA('https://nepszava.hu/3156332_gyilkossag-hetes-ongyilkossag-riport')
 ########################
 
 file1 = open(sys.argv[1], 'r')
