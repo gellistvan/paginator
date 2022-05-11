@@ -125,8 +125,6 @@ def CheckPartLength(name, sumlength) :
                 print(seconds)
                 return sumlen+seconds
 
-
-
 def CreateOutput():
     command="./ffmpeg.exe -f concat -i " + projekt_name + "/list.txt -c copy " + projekt_name + "/" + projekt_name+ ".mp4"
     subprocess.call(command)
