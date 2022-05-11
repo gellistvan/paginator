@@ -1,16 +1,11 @@
 import shutil
 
 from site_handlers import *
-import json
-import re
 import subprocess
 import requests
 import sys
-#import html2text
 import pyttsx3
 from PIL import Image
-from html.parser import HTMLParser
-from bs4 import BeautifulSoup
 import os
 
 # proxy = 'http://10.66.243.130:8080'
@@ -44,7 +39,7 @@ def init_speaker() :
     return speaker
     
 def AppendtoFile(path, string):
-    file_object = open(path, 'a')
+    file_object = open(path, 'a', encoding='utf-8')
     file_object.write(string + '\n')
 
 def HandleImage(url, index):
@@ -87,8 +82,8 @@ def HandleImage(url, index):
 
     
 ########################
-def MergeWithVideo(index, music):
-    name=format(index, '02d')
+def MergeWithVideo(name, music):
+    # name=format(index, '02d')
 
     command="./ffmpeg.exe -stats -i " + tempath + name + ".mp3 -f null -"
     
@@ -143,22 +138,22 @@ def CreateDescription():
 
     AppendtoFile(projekt_name + "/description.txt", "Tartalom:")
 
-    with open(tempath + "lenghts.txt", "r") as lengthfile:
+    with open(tempath + "lenghts.txt", "r", encoding='utf-8') as lengthfile:
         lengths = lengthfile.readlines()
-    with open(tempath + "desc.txt", "r") as title_file:
+    with open(tempath + "desc.txt", "r", encoding='utf-8') as title_file:
         titles = title_file.readlines()
     if len(lengths) == len(titles):
         for i in range(len(lengths)):
-            AppendtoFile(projekt_name + "/description.txt", lengths[i].rstrip() + " - " + titles[i].rstrip())
+            AppendtoFile(projekt_name + "/description.txt", lengths[i].strip() + " - " + titles[i].strip())
     else:
         for title in titles:
-            AppendtoFile(projekt_name + "/description.txt", title.rstrip())
+            AppendtoFile(projekt_name + "/description.txt", title.strip())
 
     AppendtoFile(projekt_name + "/description.txt", "\nForrások:")
 
-    with open(tempath + "source.txt", "r") as sources:
+    with open(tempath + "source.txt", "r", encoding='utf-8') as sources:
         for url in sources.readlines():
-            AppendtoFile(projekt_name + "/description.txt", url.rstrip())
+            AppendtoFile(projekt_name + "/description.txt", url.strip())
 
 
     print(lengths)
@@ -204,7 +199,7 @@ for line in Lines:
         AppendtoFile(tempath + '/desc.txt', title)
         AppendtoFile(tempath + '/source.txt', url)
 
-        article_file = open(textpath + "/" + name + '.txt', 'w')
+        article_file = open(textpath + "/" + name + '.txt', 'w', encoding="utf-8")
         article_file.write(title + '\n' + content + '\n')
 
         speaker.save_to_file(title + '\n' + content, tempath + "/" + name + '.mp3')
@@ -213,7 +208,7 @@ for line in Lines:
     elif (not skip):
         name=format(int(count /2), '02d')
         HandleImage(line.strip(), int(count /2))
-        MergeWithVideo(int(count /2), sys.argv[2])
+        MergeWithVideo(name, sys.argv[2])
         sumlen = CheckPartLength(name, sumlen)
 
 CreateOutput()
