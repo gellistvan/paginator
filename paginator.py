@@ -8,12 +8,12 @@ import pyttsx3
 from PIL import Image
 import os
 
-# proxy = 'http://10.66.243.130:8080'
-#
-# os.environ['http_proxy'] = proxy
-# os.environ['HTTP_PROXY'] = proxy
-# os.environ['https_proxy'] = proxy
-# os.environ['HTTPS_PROXY'] = proxy
+proxy = 'http://10.66.243.130:8080'
+
+os.environ['http_proxy'] = proxy
+os.environ['HTTP_PROXY'] = proxy
+os.environ['https_proxy'] = proxy
+os.environ['HTTPS_PROXY'] = proxy
 
 textpath = ''
 partpath = ''
@@ -183,7 +183,7 @@ CreateWorkspace(projekt_name)
 
 Lines = file1.readlines()
 count = 0
-
+#
 skip=False
 sumlen=0
 for line in Lines:
@@ -214,4 +214,4 @@ for line in Lines:
 CreateOutput()
 CreateDescription()
 
-shutil.rmtree(tempath)
+# shutil.rmtree(tempath)

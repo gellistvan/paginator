@@ -218,8 +218,12 @@ def TELEX(url):
     req = requests.get(url, headers).text
     soup = BeautifulSoup(req, "html.parser")
     title=soup.find("h1").get_text()
-    top_section=soup.find("p", class_='article__lead').get_text()
-    content=soup.find("div", class_='article-html-content')
+
+    top_section = ''
+    lead=soup.find("p", class_='article__lead')
+    if lead is not None:
+        top_section += lead.get_text()
+    content = soup.find("div", class_='article-html-content')
     figures = content.findAllNext("figure")
     for figure in figures:
         figure.decompose()
