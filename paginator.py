@@ -45,21 +45,28 @@ def AppendtoFile(path, string):
 def HandleImage(url, index):
     name=format(index, '02d')
     print('image')
-    with open(tempath + "/" + name + '.jpg', 'wb') as handle:
-        response = requests.get(url, headers, stream=True)
-        print(response)
-
-        if not response.ok:
+    if "file://" not in url:
+        with open(tempath + "/" + name + '.jpg', 'wb') as handle:
+            response = requests.get(url, headers, stream=True)
             print(response)
 
-        for block in response.iter_content(1024):
-            if not block:
-                print(block)
-                break
+            if not response.ok:
+                print(response)
 
-            handle.write(block)
-   
-    image=Image.open(tempath + "/" + name + '.jpg')
+            for block in response.iter_content(1024):
+                if not block:
+                    print(block)
+                    break
+
+                handle.write(block)
+        image=Image.open(tempath + "/" + name + '.jpg')
+    else:
+        filename=url.split("\\")[-1];
+        ext=filename.split(".")[-1]
+        shutil.copy(url.split("//")[1], tempath + "/" + name + '.' + ext)
+        image=Image.open(tempath + "/" + name + '.' + ext)
+
+    # image=Image.open(tempath + "/" + name + '.jpg')
     width, height = image.size
     if (width*9 == 16 * height):
         image = image.resize((1024, 576), Image.ANTIALIAS)

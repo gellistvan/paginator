@@ -28,9 +28,9 @@ def CollectNames():
         keys.sort()
 
         with open(output_path + "/output.txt", "w", encoding='utf-8') as output:
-            last=''
+            last=keys[0]
             for key in keys[:]:
-                if last != key:
+                if last != key and ((not last in key) or abs(len(last) - len(key)) > 3) :
                     last=key
                     output.write(key + "\n")
                 else:
@@ -52,7 +52,8 @@ def GenerateMP4 (name):
                 print(line)
                 print(seconds)
 
-    command="./ffmpeg.exe -loop 1 -framerate 1 -i " + image_path + " -i " + music_path + name + ".mp3 -i deep2.mp3 -ss 0 -t " + str(seconds) + " -filter_complex amix=inputs=2:duration=longest:weights=\"3 0.82\" -c:v libx264 -r 0.1 -movflags +faststart " + video_path + name + ".mp4"
+    rate = '1' if seconds < 150 else '0.1'
+    command="./ffmpeg.exe -loop 1 -framerate 1 -i " + music_path + "cover.png -i " + music_path + name + ".mp3 -i deep2.mp3 -ss 0 -t " + str(seconds) + " -filter_complex amix=inputs=2:duration=longest:weights=\"3 0.82\" -c:v libx264 -r " + rate + " -movflags +faststart " + video_path + name + ".mp4"
     subprocess.call(command)
     file_object = open(output_path+"/list.txt", 'a', encoding='utf-8')
     file_object.write("file 'mp4/" + name + ".mp4'\n")
@@ -163,6 +164,7 @@ with open(input_path, "r", encoding='utf-8') as input:
         speaker.save_to_file(section, music_path + name + '.mp3')
         speaker.runAndWait()
         if image_path:
+            shutil.copyfile(image_path, music_path + "cover.png")
             GenerateMP4(name)
             sumlen = CheckPartLength(name, sumlen)
         index += 1
