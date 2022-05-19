@@ -65,10 +65,11 @@ def LAKMUSZ(url):
     title=soup.find("h1").get_text()
     content=soup.find("div", class_='cp_content')
     RemoveAll(content, "figure")
-    for item in content.find("img").find_all_next("br"):
-        item.decompose()
-    for item in content.find("img").find_all_next("span"):
-        item.decompose()
+    if content.find("img") is not None:
+        for item in content.find("img").find_all_next("br"):
+            item.decompose()
+        for item in content.find("img").find_all_next("span"):
+            item.decompose()
 
     print(title)
     print(content.get_text())
@@ -259,6 +260,7 @@ def NegyNegyNegy(url):
     soup = BeautifulSoup(req, "html.parser")
     title = soup.find("h1")
     content = soup.find("div", class_='lq et iP').findChildren("div", recursive=False)[0]
+    content = soup.find("div", class_='rich-text-feature')#.findChildren("div", recursive=False)[0]
     figures = content.findAllNext("figure")
     for figure in figures:
         figure.decompose()
