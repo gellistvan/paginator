@@ -258,7 +258,7 @@ def NegyNegyNegy(url):
     req = requests.get(url, headers).text
     soup = BeautifulSoup(req, "html.parser")
     title = soup.find("h1")
-    content = soup.find("div", class_='ls eu iP').findChildren("div", recursive=False)[0]
+    content = soup.find("div", class_='lq et iP').findChildren("div", recursive=False)[0]
     figures = content.findAllNext("figure")
     for figure in figures:
         figure.decompose()

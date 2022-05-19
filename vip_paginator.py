@@ -30,14 +30,14 @@ headers = {
 def init_speaker() :
     speaker=pyttsx3.init('sapi5')
     #voices = speaker.getProperty("voices")
-#    for voice in voices:
-#        print(voice.id)
-        
+    #    for voice in voices:
+    #        print(voice.id)
+
     speaker.setProperty('voice', 'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices\Tokens\MSTTS_V110_hu-HU_Szabolcs')
-    speaker.setProperty('rate', 160)   
+    speaker.setProperty('rate', 160)
     speaker.runAndWait()
     return speaker
-    
+
 def AppendtoFile(path, string):
     file_object = open(path, 'a', encoding='utf-8')
     file_object.write(string + '\n')
@@ -87,17 +87,17 @@ def HandleImage(url, index):
 
     image.save(imgpath + "/" + name + '.png', "PNG")
 
-    
+
 ########################
 def MergeWithVideo(name, music):
     # name=format(index, '02d')
 
     command="./ffmpeg.exe -stats -i " + tempath + name + ".mp3 -f null -"
-    
+
     with open(tempath + "stdout.txt","wb") as out, open(tempath + "stderr.txt","wb") as err:
         subprocess.call(command,stdout=out,stderr=err)
     seconds=0
-    
+
     with open(tempath + "stderr.txt","r") as file1:
         Lines = file1.readlines()
         for line in Lines:
@@ -154,25 +154,17 @@ def CreateDescription():
         for title in titles:
             AppendtoFile(projekt_name + "/description.txt", title.strip())
 
-    AppendtoFile(projekt_name + "/description.txt", "\nForrások:")
-
-    with open(tempath + "source.txt", "r", encoding='utf-8') as sources:
-        for url in sources.readlines():
-            AppendtoFile(projekt_name + "/description.txt", url.strip())
-
-
-    print(lengths)
 ########################
 
 def CreateWorkspace(projekt):
-    if os.path.isdir(projekt_name):
-        shutil.rmtree(projekt_name)
-    os.umask(0)
-    os.makedirs(projekt_name, 0o777)
-    os.makedirs(textpath, 0o777)
-    os.makedirs(imgpath, 0o777)
-    os.makedirs(partpath, 0o777)
-    os.makedirs(tempath, 0o777)
+    if not os.path.isdir(projekt_name):
+        os.umask(0)
+        os.makedirs(projekt_name, 0o777)
+        os.makedirs(textpath, 0o777)
+        os.makedirs(imgpath, 0o777)
+        os.makedirs(partpath, 0o777)
+        os.makedirs(tempath, 0o777)
+        sys.exit(0)
 
 ############### MAIN #################
 speaker=init_speaker()
@@ -188,34 +180,29 @@ tempath = projekt_name + "/tmp/"
 CreateWorkspace(projekt_name)
 
 Lines = file1.readlines()
-count = 0
+index = 0
 #
 skip=False
 sumlen=0
 for line in Lines:
-    count += 1
+    index += 1
+    name=format(index, '02d')
     url=line.strip()
+    title=''
+    content=''
+    with open(textpath + '/' + name + ".txt", encoding='utf-8') as article:
+        article_lines=article.readlines()
+        title=article_lines[0]
+        for al in article_lines[2:]:
+            content +="\n" + al
 
-    if (count % 2) == 1:
-        index= int(count /2) + 1
-        [title, content] = HandleArticle(url)
+    AppendtoFile(tempath + '/desc.txt', title)
+    speaker.save_to_file(title + '\n' + content, tempath + "/" + name + '.mp3')
+    speaker.runAndWait()
 
-        name=format(index, '02d')
-
-        AppendtoFile(tempath + '/desc.txt', title)
-        AppendtoFile(tempath + '/source.txt', url)
-
-        article_file = open(textpath + "/" + name + '.txt', 'w', encoding="utf-8")
-        article_file.write(title + '\n' + content + '\n')
-
-        speaker.save_to_file(title + '\n' + content, tempath + "/" + name + '.mp3')
-        speaker.runAndWait()
-
-    elif (not skip):
-        name=format(int(count /2), '02d')
-        HandleImage(line.strip(), int(count /2))
-        MergeWithVideo(name, sys.argv[2])
-        sumlen = CheckPartLength(name, sumlen)
+    HandleImage(line.strip(), index)
+    MergeWithVideo(name, sys.argv[2])
+    sumlen = CheckPartLength(name, sumlen)
 
 CreateOutput()
 CreateDescription()
