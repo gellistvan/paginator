@@ -1,6 +1,7 @@
 import os, sys, getopt, pyttsx3,shutil
 import subprocess
-import re
+from collect_names import *
+from media_utils import *
 
 tempath = ''
 music_path=''
@@ -16,50 +17,6 @@ image_path=''
 background_music='./deep2.mp3'
 music_weight='3 0.82'
 
-
-def CollectNames():
-    print('collect')
-    with open(input_path, "r", encoding='utf-8') as input:
-        input_file = input.read()
-        matches = re.findall(r"[^\.\?\!\-”\]] (([A-Z][a-z]{3,}[ \.\!\?\,\-])+)", input_file)
-        keys=[]
-        for item in matches:
-            keys.append(item[0][0:-1])
-        keys.sort()
-
-        with open(output_path + "/output.txt", "w", encoding='utf-8') as output:
-            last = keys[0]
-            for key in keys[:]:
-                if last != key and ((last not in key) or abs(len(key) - len(last)) > 3):
-                    if (last + ' ') in key :
-                        keys.remove(key)
-                        keys.append(key[len(last) + 1 :])
-                    else:
-                        last=key
-                else:
-                    keys.remove(key)
-
-            last = keys[0]
-            keys.sort()
-            for key in keys[:]:
-                if last != key and ((last not in key) or abs(len(key) - len(last)) > 3):
-                    last=key
-                    output.write(key + "\n")
-                else:
-                    keys.remove(key)
-        matches = re.findall(r"[^\.\?\!\-”\]] (([A-Z]{2,}[ \.\!\?\,\-])+)", input_file)
-        keys=[]
-        for item in matches:
-            keys.append(item[0][0:-1])
-        keys.sort()
-        last = keys[0]
-        with open(output_path + "/output.txt", "a", encoding='utf-8') as output:
-            for key in keys[:]:
-                if last != key and ((last not in key) or abs(len(key) - len(last)) > 3):
-                    last=key
-                    output.write(key + "\n")
-                else:
-                    keys.remove(key)
 
 def GenerateMP4 (name):
     command="./ffmpeg.exe -stats -i " + music_path + name + ".mp3 -f null -"
@@ -84,12 +41,6 @@ def GenerateMP4 (name):
     file_object.write("file 'mp4/" + name + ".mp4'\n")
     print(name + 'video')
 
-def init_speaker() :
-    speaker=pyttsx3.init('sapi5')
-    speaker.setProperty('voice', 'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices\Tokens\MSTTS_V110_hu-HU_Szabolcs')
-    speaker.setProperty('rate', 160)
-    speaker.runAndWait()
-    return speaker
 
 def CheckPartLength(name, sumlength) :
     hour = int(sumlength/3600)
@@ -97,21 +48,9 @@ def CheckPartLength(name, sumlength) :
     seconds = int(sumlength - (hour * 3600) - (minute * 60))
     file_object = open(output_path + "/lenghts.txt", 'a', encoding='utf-8')
     file_object.write(str(hour) + ":" + format(minute, "02d") + ":" + format(seconds, "02d") + "\n")
-
-    command="./ffmpeg.exe -stats -i " + video_path + name + ".mp4 -f null -"
-
-    with open(tempath + "stdout.txt","wb") as out, open(tempath + "stderr.txt","wb") as err:
-        subprocess.call(command,stdout=out,stderr=err)
-
-    with open(tempath + "stderr.txt","r") as file1:
-        Lines = file1.readlines()
-        for line in Lines:
-            if ("Duration:" in line):
-                times=line.split()[1].split('.')[0].split(":")
-                seconds=int(times[0])*3600 + int(times[1])*60+int(times[2])
-                print(line)
-                print(seconds)
-                return sumlen+seconds
+    second = GetMediaLen(video_path + name + ".mp4")
+    print(seconds)
+    return sumlen + seconds
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], "ho:i:fr:l:p:b:w:", ["help", "output="])
@@ -165,7 +104,7 @@ os.makedirs(tempath)
 
 
 if collect_names :
-    CollectNames()
+    CollectNames(input_path, output_path)
     exit(0)
 
 # Generate media
