@@ -3,6 +3,8 @@ import re
 import requests
 from bs4 import BeautifulSoup
 from html.parser import HTMLParser
+from media_utils import *
+
 
 
 headers = {
@@ -11,6 +13,17 @@ headers = {
     "Accept-Language": "en-GB,en;q=0.5",
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:81.0) Gecko/20100101 Firefox/81.0",
 }
+
+def FindFirst(parent, object, classes = ''):
+    if classes != '' :
+        container=parent.findAllNext(object, class_=classes)
+        if len(container) :
+            return container[0]
+    else :
+        container=parent.findAllNext(object)
+        if len(container) :
+            return container[0]
+    return None
 
 def RemoveAll(parent, object, classes = ''):
     if classes != '' :
@@ -35,7 +48,7 @@ def ParseItem(object):
     return temp
 
 
-def NEPSZAVA(url):
+def NEPSZAVA(url, count, imgpath, tempath):
     name=url.split("/")[-1]
     req = requests.get("https://nepszava.hu/json/cikk.json?id=" + name, headers).text
     parsed = json.loads(req)
@@ -46,7 +59,8 @@ def NEPSZAVA(url):
         if obj == "title":
             title = parsed[obj]
         if obj == "lead":
-            content += parsed[obj]
+            if isinstance(parsed[obj], str):
+                content += parsed[obj]
         elif obj=="content": # list
             tags = parsed[obj]
             for tag in tags:
@@ -54,12 +68,9 @@ def NEPSZAVA(url):
 
     soup = BeautifulSoup(content, "html.parser")
 
-    print(title)
-    print (soup.get_text())
+    return [title, soup.get_text(), False]
 
-    return [title, soup.get_text()]
-
-def LAKMUSZ(url):
+def LAKMUSZ(url, count, imgpath, tempath):
     req = requests.get(url, headers).text
     soup = BeautifulSoup(req, "html.parser")
     title=soup.find("h1").get_text()
@@ -71,11 +82,9 @@ def LAKMUSZ(url):
         for item in content.find("img").find_all_next("span"):
             item.decompose()
 
-    print(title)
-    print(content.get_text())
-    return [title, content.get_text()]
+    return [title, content.get_text(), False]
 
-def INDEX(url):
+def INDEX(url, count, imgpath, tempath):
     req = requests.get(url, headers).text
     soup = BeautifulSoup(req, "html.parser")
     title=soup.find("h1").get_text()
@@ -86,15 +95,20 @@ def INDEX(url):
     RemoveAll(content, "div", 'indavideo')
     RemoveAll(content, "div", 'meta-twitter')
 
-    print(title)
-    print(content.get_text())
-    return [title, lead + "/n" + content.get_text()]
+    return [title, lead + "/n" + content.get_text(), False]
 
-def QUBIT(url):
+def QUBIT(url, count, imgpath, tempath):
     req = requests.get(url, headers).text
     soup = BeautifulSoup(req, "html.parser")
+    imfound = False
     title=soup.find("h1").get_text()
     content=soup.find("div", class_='post__content')
+    image=FindFirst(content, "img")
+    if image is not None:
+        imurl=image['src'].strip()
+        HandleImage(imurl, count, imgpath, tempath)
+        imfound = True
+
     RemoveAll(content, "div", 'post__authors')
     RemoveAll(content, "div", 'donation-line-fz3')
     RemoveAll(content, "figure")
@@ -103,22 +117,18 @@ def QUBIT(url):
     if 0 < len(paragrapsh) :
         paragrapsh[-1].decompose()
 
-    print(title)
-    print(content.get_text())
-    return [title, content.get_text()]
+    return [title, content.get_text(), imfound]
 
-def JELEN(url):
+def JELEN(url, count, imgpath, tempath):
     req = requests.get(url, headers).text
     soup = BeautifulSoup(req, "html.parser")
     title=soup.find("h1").get_text()
     content=soup.find("div", class_='content')
     RemoveAll(content, "div", 'cikkblock')
 
-    print(title)
-    print(content.get_text())
-    return [title, content.get_text()]
+    return [title, content.get_text(), False]
 
-def HVG(url):
+def HVG(url, count, imgpath, tempath):
     req = requests.get(url, headers).text
     soup = BeautifulSoup(req, "html.parser")
     title=soup.find("h1").get_text()
@@ -126,11 +136,9 @@ def HVG(url):
     content=soup.find("div", class_='article-content entry-content')
     RemoveAll(content, "figure")
 
-    print(title)
-    print(content.get_text())
-    return [title, lead + "\n" + content.get_text()]
+    return [title, lead + "\n" + content.get_text(), False]
 
-def VALASZ(url):
+def VALASZ(url, count, imgpath, tempath):
     req = requests.get(url, headers).text
     soup = BeautifulSoup(req, "html.parser")
     title=soup.find("h1").get_text()
@@ -141,11 +149,9 @@ def VALASZ(url):
     RemoveAll(content, "figure")
     RemoveAll(content, "h2")
 
-    print(title)
-    print(content.get_text())
-    return [title, content.get_text()]
+    return [title, content.get_text(), False]
 
-def VG(url):
+def VG(url, count, imgpath, tempath):
     req = requests.get(url, headers).text
     soup = BeautifulSoup(req, "html.parser")
     title=soup.find("h1").get_text()
@@ -153,11 +159,9 @@ def VG(url):
     content=soup.find("app-article-text")
     RemoveAll(content, "figure")
 
-    print(title)
-    print(content.get_text())
-    return [title, lead + "\n" + content.get_text()]
+    return [title, lead + "\n" + content.get_text(), False]
 
-def HANG(url):
+def HANG(url, count, imgpath, tempath):
     req = requests.get(url, headers).text
     soup = BeautifulSoup(req, "html.parser")
     title=soup.find("h1").get_text()
@@ -168,12 +172,10 @@ def HANG(url):
     RemoveAll(content, "div", "cikkblock")
     RemoveAll(content, "figure")
 
-    print(title)
-    print(content.get_text())
-    return [title, content.get_text()]
+    return [title, content.get_text(), False]
 
 
-def D36(url):
+def D36(url, count, imgpath, tempath):
     req = requests.get(url, headers).text
     soup = BeautifulSoup(req, "html.parser")
     title=soup.find("h1").get_text()
@@ -182,22 +184,18 @@ def D36(url):
     RemoveAll(content, "div", classes='felhivas')
     RemoveAll(content, "figure")
 
-    print(title)
-    print(content.get_text())
-    return [title, content.get_text()]
+    return [title, content.get_text(), False]
 
-def PORTFOLIO(url):
+def PORTFOLIO(url, count, imgpath, tempath):
     req = requests.get(url, headers).text
     soup = BeautifulSoup(req, "html.parser")
     title=soup.find("h1").get_text()
     content=soup.find("article")
     content.find("ul", class_='tags').decompose()
 
-    print(title)
-    print(content.get_text())
-    return [title, content.get_text()]
+    return [title, content.get_text(), False]
 
-def G7(url):
+def G7(url, count, imgpath, tempath):
     req = requests.get(url, headers).text
     soup = BeautifulSoup(req, "html.parser")
     title=soup.find("h1").get_text()
@@ -205,17 +203,16 @@ def G7(url):
     content.find("div", class_='donate__articleBox -donateArticleBox _ce_measure_widget').decompose()
     content.find("div", class_='fb-share-button').decompose()
     content.find("p", class_='buttons-container _ce_measure_widget').decompose()
+    RemoveAll(content, "p", "related-post")
 
     frames = content.findAllNext("iframe")
     for frame in frames:
         frame.decompose()
 
 
-    print(title)
-    print(content.get_text())
-    return [title, content.get_text()]
+    return [title, content.get_text(), False]
 
-def TELEX(url):
+def TELEX(url, count, imgpath, tempath):
     req = requests.get(url, headers).text
     soup = BeautifulSoup(req, "html.parser")
     title=soup.find("h1").get_text()
@@ -229,10 +226,9 @@ def TELEX(url):
     for figure in figures:
         figure.decompose()
 
-    print(top_section + '\n' + content.get_text())
-    return [title, top_section + '\n' + content.get_text()]
+    return [title, top_section + '\n' + content.get_text(), False]
 
-def Huszon4hu(url):
+def Huszon4hu(url, count, imgpath, tempath):
     req = requests.get(url, headers).text
     soup = BeautifulSoup(req, "html.parser").find("div", {"class": "is_content"})
     content = soup.find("div", class_='o-post__body o-postCnt post-body')
@@ -241,6 +237,7 @@ def Huszon4hu(url):
         figure.decompose()
 
     RemoveAll(content, "div", 'm-riporter')
+    RemoveAll(content, "div", 'm-articRecommend')
 
     title=soup.find("h1").get_text();
 
@@ -251,26 +248,19 @@ def Huszon4hu(url):
     if block is not None:
         block.decompose()
 
-    print(title)
-    print(content.get_text())
-    return [title, content.get_text()]
+    return [title, content.get_text(), False]
 
-def NegyNegyNegy(url):
+def NegyNegyNegy(url, count, imgpath, tempath):
     req = requests.get(url, headers).text
     soup = BeautifulSoup(req, "html.parser")
     title = soup.find("h1")
     content = soup.find("div", class_='lq et iP').findChildren("div", recursive=False)[0]
-    content = soup.find("div", class_='rich-text-feature')#.findChildren("div", recursive=False)[0]
-    figures = content.findAllNext("figure")
-    for figure in figures:
-        figure.decompose()
-    # print(figures)
-    content_text = content.get_text()
-    content_text = re.sub(r'[\n\n]+', r'\n', content_text, re.MULTILINE)
-    print(content_text)
-    return [title.get_text(), content.get_text()]
+    # content = soup.find("div", class_='rich-text-feature')#.findChildren("div", recursive=False)[0]
+    RemoveAll(content, "figure")
 
-def Atlatszo(url):
+    return [title.get_text(), content.get_text(), False]
+
+def Atlatszo(url, count, imgpath, tempath):
     req = requests.get(url, headers).text
     soup = BeautifulSoup(req, "html.parser").find("div", {"class": "inner-article_body"})
     title=soup.find("h1")
@@ -287,58 +277,58 @@ def Atlatszo(url):
     block=soup.find("blockquote", {"class": "embedly-card"})
     if block is not None:
         block.decompose()
-    return [title.get_text(), content.get_text()]
+    return [title.get_text(), content.get_text(), False]
 
 
-def HandleArticle(url):
+def HandleArticle(url, count, imgpath, tempath):
 
     if 'atlatszo.hu' in url:
-        return Atlatszo(url)
+        return Atlatszo(url, count, imgpath, tempath)
 
     elif '24.hu' in url:
-        return Huszon4hu(url)
+        return Huszon4hu(url, count, imgpath, tempath)
 
     elif '444.hu' in url:
-        return NegyNegyNegy(url)
+        return NegyNegyNegy(url, count, imgpath, tempath)
 
     elif 'telex.hu' in url:
-        return TELEX(url)
+        return TELEX(url, count, imgpath, tempath)
 
     elif 'g7.hu' in url:
-        return G7(url)
+        return G7(url, count, imgpath, tempath)
 
     elif 'portfolio.hu' in url:
-        return PORTFOLIO(url)
+        return PORTFOLIO(url, count, imgpath, tempath)
 
     elif 'direkt36.hu' in url:
-        return D36(url)
+        return D36(url, count, imgpath, tempath)
 
     elif 'hang.hu' in url:
-        return HANG(url)
+        return HANG(url, count, imgpath, tempath)
 
     elif 'valaszonline' in url:
-        return VALASZ(url)
+        return VALASZ(url, count, imgpath, tempath)
 
     elif 'hvg.hu' in url:
-        return HVG(url)
+        return HVG(url, count, imgpath, tempath)
 
     elif 'vg.hu' in url:
-        return VG(url)
+        return VG(url, count, imgpath, tempath)
 
     elif 'en.media' in url:
-        return JELEN(url)
+        return JELEN(url, count, imgpath, tempath)
 
     elif 'bit.hu' in url:
-        return QUBIT(url)
+        return QUBIT(url, count, imgpath, tempath)
 
     elif 'index.hu' in url:
-        return INDEX(url)
+        return INDEX(url, count, imgpath, tempath)
 
     elif 'lakmusz' in url:
-        return LAKMUSZ(url)
+        return LAKMUSZ(url, count, imgpath, tempath)
 
     elif 'nepszava.hu' in url:
-        return NEPSZAVA(url)
+        return NEPSZAVA(url, count, imgpath, tempath)
 
     else:
         print("Unknown site")

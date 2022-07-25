@@ -2,12 +2,12 @@ from site_handlers import *
 import sys
 from media_utils import *
 
-# proxy = 'http://10.66.243.130:8080'
-#
-# os.environ['http_proxy'] = proxy
-# os.environ['HTTP_PROXY'] = proxy
-# os.environ['https_proxy'] = proxy
-# os.environ['HTTPS_PROXY'] = proxy
+proxy = 'http://10.66.243.130:8080'
+
+os.environ['http_proxy'] = proxy
+os.environ['HTTP_PROXY'] = proxy
+os.environ['https_proxy'] = proxy
+os.environ['HTTPS_PROXY'] = proxy
 
 textpath = ''
 partpath = ''
@@ -89,27 +89,36 @@ textpath = projekt_name + "/text/"
 imgpath = projekt_name + "/img/"
 partpath = projekt_name + "/part/"
 tempath = projekt_name + "/tmp/"
-# CreateWorkspace(projekt_name)
+CreateWorkspace(projekt_name)
 
 Lines = file1.readlines()
-count = 0
+count = 1
 #
 skip=False
 sumlen=0
+image_process=False
 for line in Lines:
-    count += 1
+    name=format(count, '02d')
     url=line.strip()
-    index = int(count /2)+1 if count%2 == 1 else int(count /2)
-    if os.path.isfile(partpath + format(index, "02d") + ".mp4") :
-        continue
 
-    if (count % 2) == 1:
-        index= int(count /2) + 1
-        [title, content] = HandleArticle(url)
+    if image_process:
+        HandleImage(line.strip(), count, imgpath, tempath)
+        MergeWithVideo(name, sys.argv[2])
+        sumlen = CheckPartLength(name, sumlen)
+        count += 1
+        image_process = False
+    else:
+        #count += 1
+        if os.path.isfile(partpath + name + ".mp4") :
+            continue
+        [title, content, image_found] = HandleArticle(url, count, imgpath, tempath)
 
-        name=format(index, '02d')
+        if not image_found:
+            image_process = True
 
-        AppendtoFile(tempath + '/desc.txt', title)
+        print(name + "/" + str(int(len(Lines)/2))+ ": " + title.strip())
+
+        AppendtoFile(tempath + '/desc.txt', title.strip())
         AppendtoFile(tempath + '/source.txt', url)
 
         article_file = open(textpath + "/" + name + '.txt', 'w', encoding="utf-8")
@@ -118,11 +127,6 @@ for line in Lines:
         speaker.save_to_file(title + '\n' + content, tempath + "/" + name + '.mp3')
         speaker.runAndWait()
 
-    elif (not skip):
-        name=format(int(count /2), '02d')
-        HandleImage(line.strip(), int(count /2), tempath, imgpath)
-        MergeWithVideo(name, sys.argv[2])
-        sumlen = CheckPartLength(name, sumlen)
 
 CreateOutput()
 CreateDescription()
