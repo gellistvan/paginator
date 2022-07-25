@@ -14,6 +14,8 @@ headers = {
 
 def init_speaker() :
     speaker=pyttsx3.init('sapi5')
+    for voice in speaker.getProperty('voices'):
+        print(voice)
     speaker.setProperty('voice', 'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech\Voices\Tokens\MSTTS_V110_hu-HU_Szabolcs')
     speaker.setProperty('rate', 160)
     speaker.runAndWait()
@@ -88,4 +90,4 @@ def HandleImage(url, index, imgpath, tempath, W = 1024, H=573):
         shutil.copy(url.split("//")[1], tempath + "/" + name + '.' + ext)
         filename = tempath + "/" + name + '.' + ext
 
-    ResizeImage(filename, imgpath + "/" + name)
+    ResizeImage(filename, imgpath + "/" + name, W, H)

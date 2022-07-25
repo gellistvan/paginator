@@ -35,7 +35,7 @@ def GenerateMP4 (name):
                 print(seconds)
 
     rate = '1' if seconds < 150 else '0.1'
-    command="./ffmpeg.exe -loop 1 -framerate 1 -i " + music_path + "cover.png -i " + music_path + name + ".mp3 -i deep2.mp3 -ss 0 -t " + str(seconds) + " -filter_complex amix=inputs=2:duration=longest:weights=\"3 0.82\" -c:v libx264 -r " + rate + " -movflags +faststart " + video_path + name + ".mp4"
+    command="./ffmpeg.exe -loop 1 -framerate 1 -i " + music_path + "cover.png -i " + music_path + name + ".mp3 -i " + background_music + ".mp3 -ss 0 -t " + str(seconds) + " -filter_complex amix=inputs=2:duration=longest:weights=\"" + music_weight + "\" -c:v libx264 -r " + rate + " -movflags +faststart " + video_path + name + ".mp4"
     subprocess.call(command)
     file_object = open(output_path+"/list.txt", 'a', encoding='utf-8')
     file_object.write("file 'mp4/" + name + ".mp4'\n")
@@ -92,6 +92,12 @@ if output_path == '':
 music_path = output_path+"/mp3/"
 tempath=output_path + "/tmp/"
 
+
+# Generate media
+speaker = init_speaker()
+exit(0)
+
+
 if os.path.isdir(output_path):
     shutil.rmtree(output_path)
 os.makedirs(output_path, 0o777)
@@ -103,12 +109,6 @@ if image_path:
 os.makedirs(tempath)
 
 
-if collect_names :
-    CollectNames(input_path, output_path)
-    exit(0)
-
-# Generate media
-speaker = init_speaker()
 with open(input_path, "r", encoding='utf-8') as input:
     input_file = input.read()
 
@@ -119,6 +119,10 @@ with open(input_path, "r", encoding='utf-8') as input:
             for line in pronunciation:
                 values = line.split('\t')
                 input_file=input_file.replace(values[0].lstrip(), values[1].rstrip())
+
+    if collect_names :
+        CollectNames(input_file, output_path)
+        exit(0)
 
     sections=input_file.split(chapter_delimiter)
     index=0
