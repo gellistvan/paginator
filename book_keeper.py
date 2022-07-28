@@ -46,11 +46,12 @@ def CheckPartLength(name, sumlength) :
     hour = int(sumlength/3600)
     minute = int((sumlength - (hour*3600))/60)
     seconds = int(sumlength - (hour * 3600) - (minute * 60))
-    file_object = open(output_path + "/lenghts.txt", 'a', encoding='utf-8')
-    file_object.write(str(hour) + ":" + format(minute, "02d") + ":" + format(seconds, "02d") + "\n")
-    second = GetMediaLen(video_path + name + ".mp4")
+    AppendtoFile(output_path + "/lenghts.txt", str(hour) + ":" + format(minute, "02d") + ":" + format(seconds, "02d"))
+
+    seconds = GetMediaLen(video_path + name + ".mp4")
     print(seconds)
     return sumlen + seconds
+
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], "ho:i:fr:l:p:b:w:", ["help", "output="])
@@ -95,7 +96,7 @@ tempath=output_path + "/tmp/"
 
 # Generate media
 speaker = init_speaker()
-exit(0)
+# exit(0)
 
 
 if os.path.isdir(output_path):
@@ -125,6 +126,7 @@ with open(input_path, "r", encoding='utf-8') as input:
         exit(0)
 
     sections=input_file.split(chapter_delimiter)
+
     index=0
     sumlen=0
     for section in sections:
