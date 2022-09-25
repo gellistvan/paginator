@@ -1,3 +1,4 @@
+import tkinter
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
@@ -17,10 +18,10 @@ class BookKeeperWindow(tk.Tk):
     _cover_path_entry: ttk.Entry
     _cover_path_browse_button: ttk.Button
     _background_path_entry: ttk.Entry
-    _background_book_path_browse_button: ttk.Button
+    _background_path_browse_button: ttk.Button
 
     _output_path_entry: ttk.Entry
-    _output_book_path_browse_button: ttk.Button
+    _output_path_browse_button: ttk.Button
 
     _process_button: ttk.Button
 
@@ -36,6 +37,13 @@ class BookKeeperWindow(tk.Tk):
         self._init_config_frame()
         self._init_design_frame()
         self._init_output_frame()
+
+        # progress_bar = ttk.Progressbar(
+        #     self,
+        #     orient='horizontal',
+        #     mode='indeterminate'
+        # )
+        # progress_bar.pack(fill='x', expand=True, padx=10, pady=10)
 
         self._process_button = ttk.Button(self, text="Process", command=self.process_button_pressed)
         self._process_button.pack(fill='x', expand=True, padx=10, pady=10)
@@ -105,7 +113,7 @@ class BookKeeperWindow(tk.Tk):
         config_frame.pack(padx=10, pady=10, fill='both', expand=True)
 
         config_frame.is_find_names_checked = tk.BooleanVar(value=False)
-        self._find_names_check_button = ttk.Checkbutton(config_frame, text="Find names", command=self.on_find_names_check_changed,
+        self._find_names_check_button = ttk.Checkbutton(config_frame, text="Find names", command=lambda: self.on_find_names_check_changed(config_frame.is_find_names_checked),
                                             variable=config_frame.is_find_names_checked, onvalue=True, offvalue=False)
         self._find_names_check_button.pack(pady=10, fill='both', expand=True)
 
@@ -167,12 +175,44 @@ class BookKeeperWindow(tk.Tk):
         path.set(filename)
 
     def process_button_pressed(self):
+        print("Process button pressed.")
         self.config(cursor="watch")
-        print("Book file path: " + self._book_path_entry.get())
-        self.config(cursor="arrow")
+        self.disable_all_widgets(True)
 
-    def on_find_names_check_changed(self):
-        print("chick-check")
+        # call book_keeper here
+
+        self.config(cursor="watch")
+        self.disable_all_widgets(True)
+
+    def on_find_names_check_changed(self, is_checked: tkinter.BooleanVar):
+        state = "disabled" if (is_checked.get()) else "enabled"
+
+        self._dictionary_path_entry.config(state=state)
+        self._dictionary_path_browse_button.config(state=state)
+        self._volume_scale.config(state=state)
+        self._delimiter_sequence_entry.config(state=state)
+        self._cover_path_entry.config(state=state)
+        self._cover_path_browse_button.config(state=state)
+        self._background_path_entry.config(state=state)
+        self._background_path_browse_button.config(state=state)
+
+    def disable_all_widgets(self, disable: bool):
+        state = "disabled" if (disable) else "enabled"
+
+        self._book_path_entry.config(state=state)
+        self._book_path_browse_button.config(state=state)
+        self._find_names_check_button.config(state=state)
+        self._dictionary_path_entry.config(state=state)
+        self._dictionary_path_browse_button.config(state=state)
+        self._volume_scale.config(state=state)
+        self._delimiter_sequence_entry.config(state=state)
+        self._cover_path_entry.config(state=state)
+        self._cover_path_browse_button.config(state=state)
+        self._background_path_entry.config(state=state)
+        self._background_path_browse_button.config(state=state)
+        self._output_path_entry.config(state=state)
+        self._output_path_browse_button.config(state=state)
+        self._process_button.config(state=state)
 
 
 window = BookKeeperWindow()
