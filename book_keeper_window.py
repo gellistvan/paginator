@@ -12,13 +12,15 @@ class BookKeeperWindow(tk.Tk):
     _dictionary_book_path_browse_button: ttk.Button
 
     _find_names_check_button: ttk.Checkbutton
-    _volume_scale: ttk.Scale
+    _music_volume_scale: ttk.Scale
+    _voice_volume_scale: ttk.Scale
     _delimiter_sequence_entry: ttk.Entry
 
     _cover_path_entry: ttk.Entry
     _cover_path_browse_button: ttk.Button
     _background_music_path_entry: ttk.Entry
     _background_music_path_browse_button: ttk.Button
+    _preview_button: ttk.Button
 
     _output_path_entry: ttk.Entry
     _output_path_browse_button: ttk.Button
@@ -29,7 +31,7 @@ class BookKeeperWindow(tk.Tk):
         super().__init__()
 
         self.title("Book keeper")
-        self.geometry("450x600")
+        self.geometry("450x650")
         self.resizable(False, False)
         self.iconbitmap("assets/icons/icons8-audio-book-50.ico")
 
@@ -105,18 +107,29 @@ class BookKeeperWindow(tk.Tk):
         self._background_music_path_entry = ttk.Entry(background_music_path_frame, textvariable=background_music_path_frame.background_music_path)
         self._background_music_path_entry.pack(fill=tk.X, expand=True, side=tk.LEFT, padx=2, ipady=1)
 
+        self._preview_button = ttk.Button(background_music_path_frame, text="Preview", command=self.on_preview_button_pressed)
+        self._preview_button.pack(fill=tk.Y, padx=2, side=tk.LEFT)
+
         self._background_music_path_browse_button = ttk.Button(background_music_path_frame, text="Browse",
                                                                command=lambda: self.on_browse_mp3_button_pressed(background_music_path_frame.background_music_path))
-        self._background_music_path_browse_button.pack(fill=tk.BOTH, expand=True, padx=2)
+        self._background_music_path_browse_button.pack(fill=tk.Y, padx=2, side=tk.LEFT)
 
         volume_frame = ttk.Frame(design_frame)
         volume_frame.pack(padx=0, pady=0, fill='x', expand=True)
 
-        volume_label = ttk.Label(volume_frame, text="Music volume:")
-        volume_label.pack(fill='x', expand=True)
+        music_volume_frame = ttk.Frame(volume_frame)
+        music_volume_frame.pack(padx=0, pady=0, fill='x', expand=True, side=tk.LEFT)
+        music_volume_label = ttk.Label(music_volume_frame, text="Music volume:")
+        music_volume_label.pack(fill='x', expand=True)
+        self._music_volume_scale = ttk.Scale(music_volume_frame, from_=0, to=100, orient="horizontal")
+        self._music_volume_scale.pack(fill='x', expand=True, padx=5)
 
-        self._volume_scale = ttk.Scale(volume_frame, from_=0, to=100, orient="horizontal")
-        self._volume_scale.pack(fill='x', expand=True)
+        voice_volume_frame = ttk.Frame(volume_frame)
+        voice_volume_frame.pack(padx=0, pady=0, fill='x', expand=True, side=tk.RIGHT)
+        voice_volume_label = ttk.Label(voice_volume_frame, text="Voice volume:")
+        voice_volume_label.pack(fill='x', expand=True)
+        self._voice_volume_scale = ttk.Scale(voice_volume_frame, from_=0, to=100, orient="horizontal")
+        self._voice_volume_scale.pack(fill='x', expand=True, padx=5)
 
     def _init_config_frame(self):
         config_frame = ttk.LabelFrame(self, text="Configuration")
@@ -194,16 +207,21 @@ class BookKeeperWindow(tk.Tk):
         self.config(cursor="watch")
         self.disable_all_widgets(True)
 
+    def on_preview_button_pressed(self):
+        winsound.PlaySound("SystemExclamation", winsound.SND_ALIAS)
+
     def on_find_names_check_changed(self, is_checked: tkinter.BooleanVar):
         state = "disabled" if (is_checked.get()) else "enabled"
 
         self._dictionary_path_entry.config(state=state)
         self._dictionary_path_browse_button.config(state=state)
-        self._volume_scale.config(state=state)
+        self._music_volume_scale.config(state=state)
+        self._voice_volume_scale.config(state=state)
         self._delimiter_sequence_entry.config(state=state)
         self._cover_path_entry.config(state=state)
         self._cover_path_browse_button.config(state=state)
         self._background_music_path_entry.config(state=state)
+        self._preview_button.config(state=state)
         self._background_music_path_browse_button.config(state=state)
 
     def disable_all_widgets(self, disable: bool):
@@ -214,11 +232,13 @@ class BookKeeperWindow(tk.Tk):
         self._find_names_check_button.config(state=state)
         self._dictionary_path_entry.config(state=state)
         self._dictionary_path_browse_button.config(state=state)
-        self._volume_scale.config(state=state)
+        self._music_volume_scale.config(state=state)
+        self._voice_volume_scale.config(state=state)
         self._delimiter_sequence_entry.config(state=state)
         self._cover_path_entry.config(state=state)
         self._cover_path_browse_button.config(state=state)
         self._background_music_path_entry.config(state=state)
+        self._preview_button.config(state=state)
         self._background_music_path_browse_button.config(state=state)
         self._output_path_entry.config(state=state)
         self._output_path_browse_button.config(state=state)
