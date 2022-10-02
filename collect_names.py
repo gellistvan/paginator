@@ -3,7 +3,7 @@ import re
 def CollectNames(input_file, output_path):
     print('collect')
     # input_file = input.read()
-    matches = re.findall(r"[^\.\?\!\-”\]] (([A-ZÖÜÓŐÚÉÁŰÍ][a-zöüóőúéáűí]{3,}[ \.\!\?\,\-])+)", input_file)
+    matches = re.findall(r"[^\.\?\!\-”\]–] (([A-ZÖÜÓŐÚÉÁŰÍ][a-zöüóőúéáűí]{3,}[ \.\!\?\,\-])+)", input_file)
     keys=[]
     for item in matches:
         keys.append(item[0][0:-1])
