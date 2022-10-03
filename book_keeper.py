@@ -6,7 +6,7 @@ from media_utils import *
 from preprocess import *
 
 class BookKeeper:
-    tempath = ''
+    temp_path = ''
     music_path=''
     video_path=''
     output_path=''
@@ -24,11 +24,11 @@ class BookKeeper:
     def GenerateMP4 (self, name):
         command="./ffmpeg.exe -stats -i " + self.music_path + name + ".mp3 -f null -"
 
-        with open(self.tempath + "stdout.txt","wb") as out, open(self.tempath + "stderr.txt","wb") as err:
+        with open(self.temp_path + "stdout.txt", "wb") as out, open(self.temp_path + "stderr.txt", "wb") as err:
             subprocess.call(command,stdout=out,stderr=err)
         seconds=0
 
-        with open(self.tempath + "stderr.txt","r") as file1:
+        with open(self.temp_path + "stderr.txt", "r") as file1:
             Lines = file1.readlines()
             for line in Lines:
                 if ("Duration:" in line):
@@ -55,6 +55,9 @@ class BookKeeper:
         return self.sumlen + seconds
 
     def Execute(self):
+        self.music_path = self.output_path + "/mp3/"
+        self.temp_path = self.output_path + "/tmp/"
+
         # Generate media
         speaker = init_speaker()
         # exit(0)
@@ -67,7 +70,7 @@ class BookKeeper:
         if self.image_path:
             self.video_path = self.output_path + "/mp4/"
             os.makedirs(self.video_path)
-        os.makedirs(self.tempath)
+        os.makedirs(self.temp_path)
 
         with open(self.input_path, "r", encoding='utf-8') as input:
             input_file = preprocess(input.read())
@@ -82,7 +85,7 @@ class BookKeeper:
 
             if self.collect_names :
                 CollectNames(input_file, self.output_path)
-                exit(0)
+                return
 
             sections=input_file.split(self.chapter_delimiter)
 
@@ -99,50 +102,47 @@ class BookKeeper:
 
         command="./ffmpeg.exe -f concat -i " + self.output_path + "/list.txt -c copy " + self.output_path + "/output.mp4"
         subprocess.call(command)
-        shutil.move(self.output_path + "/list.txt", self.tempath + "list.txt")
-        shutil.rmtree(self.tempath)
+        shutil.move(self.output_path + "/list.txt", self.temp_path + "list.txt")
+        shutil.rmtree(self.temp_path)
 
 
-
-object = BookKeeper()
-try:
-    opts, args = getopt.getopt(sys.argv[1:], "ho:i:fr:l:p:b:w:", ["help", "output="])
-except getopt.GetoptError as err:
-    # print help information and exit:
-    print(err)  # will print something like "option -a not recognized"
-    # usage()
-    sys.exit(2)
-for o, a in opts:
-    if o in ("-h", "--help"):
+if __name__ == "__main__":
+    object = BookKeeper()
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "ho:i:fr:l:p:b:w:", ["help", "output="])
+    except getopt.GetoptError as err:
+        # print help information and exit:
+        print(err)  # will print something like "option -a not recognized"
         # usage()
-        sys.exit()
-    elif o in ("-o", "--output"):
-        object.output_path = a
-    elif o in ("-i", "--input"):
-        object.input_path = a
-    elif o in ("-f", "--find-names"):
-        object.collect_names=True
-    elif o in ("-r", "--replace"):
-        object.dictionary_path = a
-    elif o in ("-l", "--limit"):
-        object.chapter_delimiter = a
-    elif o in ("-w", "--weight"):
-        object.music_weight = a
-    elif o in ("-b", "--bacground"):
-        object.background_music = a
-    elif o in ("-p", "--picture"):
-        object.image_path = a
-    else:
-        assert False, "unhandled option"
-# ...
+        sys.exit(2)
+    for o, a in opts:
+        if o in ("-h", "--help"):
+            # usage()
+            sys.exit()
+        elif o in ("-o", "--output"):
+            object.output_path = a
+        elif o in ("-i", "--input"):
+            object.input_path = a
+        elif o in ("-f", "--find-names"):
+            object.collect_names=True
+        elif o in ("-r", "--replace"):
+            object.dictionary_path = a
+        elif o in ("-l", "--limit"):
+            object.chapter_delimiter = a
+        elif o in ("-w", "--weight"):
+            object.music_weight = a
+        elif o in ("-b", "--bacground"):
+            object.background_music = a
+        elif o in ("-p", "--picture"):
+            object.image_path = a
+        else:
+            assert False, "unhandled option"
+    # ...
 
-if not object.input_path:
-    exit (1)
+    if not object.input_path:
+        exit (1)
 
-if object.output_path == '':
-    output_path='output'
+    if object.output_path == '':
+        output_path='output'
 
-object.music_path = object.output_path+"/mp3/"
-object.tempath=object.output_path + "/tmp/"
-
-object.Execute()
+    object.Execute()

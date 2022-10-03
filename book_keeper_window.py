@@ -1,8 +1,9 @@
-import tkinter
+from book_keeper import BookKeeper
+
 import tkinter as tk
-from tkinter import ttk
-from tkinter import filedialog
+from tkinter import ttk, filedialog, messagebox
 import winsound
+from threading import Thread
 
 
 class BookKeeperWindow(tk.Tk):
@@ -12,6 +13,7 @@ class BookKeeperWindow(tk.Tk):
     _dictionary_book_path_browse_button: ttk.Button
 
     _find_names_check_button: ttk.Checkbutton
+    _is_find_names_checked: tk.StringVar
     _music_volume_scale: ttk.Scale
     _voice_volume_scale: ttk.Scale
     _delimiter_sequence_entry: ttk.Entry
@@ -27,10 +29,12 @@ class BookKeeperWindow(tk.Tk):
 
     _process_button: ttk.Button
 
+    _APP_NAME = "Book keeper"
+
     def __init__(self):
         super().__init__()
 
-        self.title("Book keeper")
+        self.title(self._APP_NAME)
         self.geometry("450x650")
         self.resizable(False, False)
         self.iconbitmap("assets/icons/icons8-audio-book-50.ico")
@@ -121,23 +125,23 @@ class BookKeeperWindow(tk.Tk):
         music_volume_frame.pack(padx=0, pady=0, fill='x', expand=True, side=tk.LEFT)
         music_volume_label = ttk.Label(music_volume_frame, text="Music volume:")
         music_volume_label.pack(fill='x', expand=True)
-        self._music_volume_scale = ttk.Scale(music_volume_frame, from_=0, to=100, orient="horizontal")
+        self._music_volume_scale = ttk.Scale(music_volume_frame, from_=0, to=5, orient="horizontal")
         self._music_volume_scale.pack(fill='x', expand=True, padx=5)
 
         voice_volume_frame = ttk.Frame(volume_frame)
         voice_volume_frame.pack(padx=0, pady=0, fill='x', expand=True, side=tk.RIGHT)
         voice_volume_label = ttk.Label(voice_volume_frame, text="Voice volume:")
         voice_volume_label.pack(fill='x', expand=True)
-        self._voice_volume_scale = ttk.Scale(voice_volume_frame, from_=0, to=100, orient="horizontal")
+        self._voice_volume_scale = ttk.Scale(voice_volume_frame, from_=0, to=5, orient="horizontal")
         self._voice_volume_scale.pack(fill='x', expand=True, padx=5)
 
     def _init_config_frame(self):
         config_frame = ttk.LabelFrame(self, text="Configuration")
         config_frame.pack(padx=10, pady=10, fill='both', expand=True)
 
-        config_frame.is_find_names_checked = tk.BooleanVar(value=False)
-        self._find_names_check_button = ttk.Checkbutton(config_frame, text="Find names", command=lambda: self.on_find_names_check_changed(config_frame.is_find_names_checked),
-                                            variable=config_frame.is_find_names_checked, onvalue=True, offvalue=False)
+        self._is_find_names_checked = tk.StringVar()
+        self._find_names_check_button = ttk.Checkbutton(config_frame, text="Find names", command=self.on_find_names_check_changed,
+                                                        variable=self._is_find_names_checked, onvalue="on", offvalue="off")
         self._find_names_check_button.pack(pady=10, fill='both', expand=True)
 
         delimiter_sequence_frame = ttk.Frame(config_frame)
@@ -198,20 +202,44 @@ class BookKeeperWindow(tk.Tk):
         path.set(filename)
 
     def process_button_pressed(self):
-        print("Process button pressed.")
+        book_keeper = BookKeeper()
+        book_keeper.input_path = self._book_path_entry.get()
+        book_keeper.image_path = self._cover_path_entry.get()
+        book_keeper.collect_names = (self._is_find_names_checked.get() == "on")
+        book_keeper.music_weight = str(self._voice_volume_scale.get()) + ' ' + str(self._music_volume_scale.get())
+        if self._output_path_entry.get():
+            book_keeper.output_path = self._output_path_entry.get()
+        if self._background_music_path_entry.get():
+            book_keeper.background_music = self._background_music_path_entry.get().replace(".mp3", "")
+        if self._dictionary_path_entry.get():
+            book_keeper.dictionary_path = self._dictionary_path_entry.get()
+        if self._delimiter_sequence_entry.get():
+            book_keeper.chapter_delimiter = self._delimiter_sequence_entry.get()
+
+        process_thread = Thread(target=lambda: self.process(book_keeper))
+        process_thread.start()
+
+    def process(self, bk: BookKeeper):
         self.config(cursor="watch")
         self.disable_all_widgets(True)
+        self.title(self._APP_NAME + " - Processing...")
 
-        # call book_keeper here
+        try:
+            bk.Execute()
+            tk.messagebox.showinfo(self._APP_NAME, ("Dictionary" if (self._is_find_names_checked.get()) else "Video") + " generated successfully.")
+        except:
+            tk.messagebox.showerror(self._APP_NAME, "An error occurred.")
 
-        self.config(cursor="watch")
-        self.disable_all_widgets(True)
+        self.title(self._APP_NAME)
+        self.config(cursor="arrow")
+        self.disable_all_widgets(False)
 
     def on_preview_button_pressed(self):
+        print("Under construction.")
         winsound.PlaySound("SystemExclamation", winsound.SND_ALIAS)
 
-    def on_find_names_check_changed(self, is_checked: tkinter.BooleanVar):
-        state = "disabled" if (is_checked.get()) else "enabled"
+    def on_find_names_check_changed(self):
+        state = "disabled" if (self._is_find_names_checked.get() == "on") else "enabled"
 
         self._dictionary_path_entry.config(state=state)
         self._dictionary_path_browse_button.config(state=state)
@@ -225,7 +253,7 @@ class BookKeeperWindow(tk.Tk):
         self._background_music_path_browse_button.config(state=state)
 
     def disable_all_widgets(self, disable: bool):
-        state = "disabled" if (disable) else "enabled"
+        state = "disabled" if disable else "enabled"
 
         self._book_path_entry.config(state=state)
         self._book_path_browse_button.config(state=state)
