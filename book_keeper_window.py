@@ -1,5 +1,7 @@
 from book_keeper import BookKeeper
 
+from tktooltip import ToolTip
+
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import winsound
@@ -120,6 +122,7 @@ class BookKeeperWindow(tk.Tk):
 
         volume_frame = ttk.Frame(design_frame)
         volume_frame.pack(padx=0, pady=0, fill='x', expand=True)
+        VOL_FORMAT = '{: .2f}'
 
         music_volume_frame = ttk.Frame(volume_frame)
         music_volume_frame.pack(padx=0, pady=0, fill='x', expand=True, side=tk.LEFT)
@@ -127,6 +130,7 @@ class BookKeeperWindow(tk.Tk):
         music_volume_label.pack(fill='x', expand=True)
         self._music_volume_scale = ttk.Scale(music_volume_frame, from_=0, to=5, orient="horizontal")
         self._music_volume_scale.pack(fill='x', expand=True, padx=5)
+        ToolTip(self._music_volume_scale, msg=lambda: VOL_FORMAT.format(self._music_volume_scale.get()))
 
         voice_volume_frame = ttk.Frame(volume_frame)
         voice_volume_frame.pack(padx=0, pady=0, fill='x', expand=True, side=tk.RIGHT)
@@ -134,6 +138,7 @@ class BookKeeperWindow(tk.Tk):
         voice_volume_label.pack(fill='x', expand=True)
         self._voice_volume_scale = ttk.Scale(voice_volume_frame, from_=0, to=5, orient="horizontal")
         self._voice_volume_scale.pack(fill='x', expand=True, padx=5)
+        ToolTip(self._voice_volume_scale, msg=lambda: VOL_FORMAT.format(self._voice_volume_scale.get()))
 
     def _init_config_frame(self):
         config_frame = ttk.LabelFrame(self, text="Configuration")
@@ -241,8 +246,6 @@ class BookKeeperWindow(tk.Tk):
     def on_find_names_check_changed(self):
         state = "disabled" if (self._is_find_names_checked.get() == "on") else "enabled"
 
-        self._dictionary_path_entry.config(state=state)
-        self._dictionary_path_browse_button.config(state=state)
         self._music_volume_scale.config(state=state)
         self._voice_volume_scale.config(state=state)
         self._delimiter_sequence_entry.config(state=state)
