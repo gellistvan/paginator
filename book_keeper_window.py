@@ -29,6 +29,7 @@ class BookKeeperWindow(tk.Tk):
     _output_path_entry: ttk.Entry
     _output_path_browse_button: ttk.Button
 
+    _progress_bar: ttk.Progressbar
     _process_button: ttk.Button
 
     _APP_NAME = "Book keeper"
@@ -46,12 +47,12 @@ class BookKeeperWindow(tk.Tk):
         self._init_design_frame()
         self._init_output_frame()
 
-        # progress_bar = ttk.Progressbar(
-        #     self,
-        #     orient='horizontal',
-        #     mode='indeterminate'
-        # )
-        # progress_bar.pack(fill='x', expand=True, padx=10, pady=10)
+        self._progress_bar = ttk.Progressbar(
+            self,
+            orient='horizontal',
+            mode='determinate'
+        )
+        self._progress_bar.pack(fill='x', expand=True, padx=10, pady=10)
 
         self._process_button = ttk.Button(self, text="Process", command=self.process_button_pressed)
         self._process_button.pack(fill='x', expand=True, padx=10, pady=10)
@@ -208,6 +209,7 @@ class BookKeeperWindow(tk.Tk):
 
     def process_button_pressed(self):
         book_keeper = BookKeeper()
+        book_keeper.set_progress_bar_callback = self.set_progress_bar
         book_keeper.input_path = self._book_path_entry.get()
         book_keeper.image_path = self._cover_path_entry.get()
         book_keeper.collect_names = (self._is_find_names_checked.get() == "on")
@@ -224,8 +226,10 @@ class BookKeeperWindow(tk.Tk):
         process_thread = Thread(target=lambda: self.process(book_keeper))
         process_thread.start()
 
+    def set_progress_bar(self, progress: float):
+        self._progress_bar["value"] = progress * 100
+
     def process(self, bk: BookKeeper):
-        self.config(cursor="watch")
         self.disable_all_widgets(True)
         self.title(self._APP_NAME + " - Processing...")
 
@@ -234,9 +238,10 @@ class BookKeeperWindow(tk.Tk):
             tk.messagebox.showinfo(self._APP_NAME, ("Dictionary" if (self._is_find_names_checked.get()) else "Video") + " generated successfully.")
         except:
             tk.messagebox.showerror(self._APP_NAME, "An error occurred.")
+        finally:
+            self.set_progress_bar(0)
 
         self.title(self._APP_NAME)
-        self.config(cursor="arrow")
         self.disable_all_widgets(False)
 
     def on_preview_button_pressed(self):

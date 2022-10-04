@@ -1,5 +1,7 @@
 import os, sys, getopt, pyttsx3,shutil
 import subprocess
+from typing import Callable
+
 from collect_names import *
 from media_utils import *
 
@@ -24,9 +26,13 @@ class BookKeeper:
     sumchars=0
     actualstep=0.0
     subprogress=0.0
+    set_progress_bar_callback: Callable = None
 
-    def Progress(self):
-        return int(100*(self.progress + self.subprogress * self.actualstep))/100.0
+    def ReportProgress(self):
+        if self.set_progress_bar_callback is not None:
+            self.set_progress_bar_callback(int(100*(self.progress + self.subprogress * self.actualstep))/100.0)
+        # else:
+            # print("=======> " + str(self.Progress()))
 
     def GenerateMP4 (self, name):
         command="./ffmpeg.exe -stats -i " + self.music_path + name + ".mp3 -f null -"
@@ -96,36 +102,36 @@ class BookKeeper:
 
             self.sumchars = len(input_file)
             sections=input_file.split(self.chapter_delimiter)
-            # print("=======> " + str(self.Progress()))
+            self.ReportProgress()
             index=0
             for section in sections:
                 self.progress += self.actualstep
                 self.subprogress = 0.0
                 self.actualstep = len(section)/self.sumchars
-                # print("=======> " + str(self.Progress()))
+                self.ReportProgress()
                 name = format(int(index), "02d")
                 speaker.save_to_file(section, self.music_path + name + '.mp3')
                 speaker.runAndWait()
-                # print("=======> " + str(self.Progress()))
+                self.ReportProgress()
                 self.subprogress = 0.35
                 if self.image_path:
                     shutil.copyfile(self.image_path, self.music_path + "cover.png")
                     self.GenerateMP4(name)
                     self.sumlen = self.CheckPartLength(name, self.sumlen)
                 index += 1
-                # print("=======> " + str(self.Progress()))
+                self.ReportProgress()
 
         self.progress = 0.99
         self.subprogress = 0.0
         self.actualstep = 1.0
-        # print("=======> " + str(self.Progress()))
+        self.ReportProgress()
         command="./ffmpeg.exe -f concat -i " + self.output_path + "/list.txt -c copy " + self.output_path + "/output.mp4"
         subprocess.call(command)
         shutil.move(self.output_path + "/list.txt", self.temp_path + "list.txt")
         shutil.rmtree(self.temp_path)
         self.progress = 1.0
         self.actualstep = 0.0
-        # print("=======> " + str(self.Progress()))
+        self.ReportProgress()
 
 
 if __name__ == "__main__":
