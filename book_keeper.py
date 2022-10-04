@@ -20,6 +20,13 @@ class BookKeeper:
     background_music='./deep2.mp3'
     music_weight='3 0.82'
     sumlen=0
+    progress=0.0
+    sumchars=0
+    actualstep=0.0
+    subprogress=0.0
+
+    def Progress(self):
+        return int(100*(self.progress + self.subprogress * self.actualstep))/100.0
 
     def GenerateMP4 (self, name):
         command="./ffmpeg.exe -stats -i " + self.music_path + name + ".mp3 -f null -"
@@ -87,23 +94,38 @@ class BookKeeper:
                 CollectNames(input_file, self.output_path)
                 return
 
+            self.sumchars = len(input_file)
             sections=input_file.split(self.chapter_delimiter)
-
+            # print("=======> " + str(self.Progress()))
             index=0
             for section in sections:
+                self.progress += self.actualstep
+                self.subprogress = 0.0
+                self.actualstep = len(section)/self.sumchars
+                # print("=======> " + str(self.Progress()))
                 name = format(int(index), "02d")
                 speaker.save_to_file(section, self.music_path + name + '.mp3')
                 speaker.runAndWait()
+                # print("=======> " + str(self.Progress()))
+                self.subprogress = 0.35
                 if self.image_path:
                     shutil.copyfile(self.image_path, self.music_path + "cover.png")
                     self.GenerateMP4(name)
                     self.sumlen = self.CheckPartLength(name, self.sumlen)
                 index += 1
+                # print("=======> " + str(self.Progress()))
 
+        self.progress = 0.99
+        self.subprogress = 0.0
+        self.actualstep = 1.0
+        # print("=======> " + str(self.Progress()))
         command="./ffmpeg.exe -f concat -i " + self.output_path + "/list.txt -c copy " + self.output_path + "/output.mp4"
         subprocess.call(command)
         shutil.move(self.output_path + "/list.txt", self.temp_path + "list.txt")
         shutil.rmtree(self.temp_path)
+        self.progress = 1.0
+        self.actualstep = 0.0
+        # print("=======> " + str(self.Progress()))
 
 
 if __name__ == "__main__":
