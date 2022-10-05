@@ -1,5 +1,6 @@
-import os, sys, getopt, pyttsx3,shutil
+import os, sys, getopt, pyttsx3, shutil
 import subprocess
+from pathlib import Path
 from typing import Callable
 
 from collect_names import *
@@ -66,6 +67,22 @@ class BookKeeper:
         seconds = GetMediaLen(self.video_path + name + ".mp4")
         print(seconds)
         return self.sumlen + seconds
+
+    def Estimate(self):
+        if self.input_path == "" or not Path(self.input_path).is_file():
+            return "", ""
+        kilobytes = (os.stat(self.input_path).st_size / 1024.0)
+        sum_seconds = 62 * kilobytes
+        out_size = (1.35 * kilobytes) / (1024 * 1024)
+        hours = int(sum_seconds / 3600)
+        sum_seconds -= hours * 3600
+        minutes = int (sum_seconds / 60)
+        sum_seconds -= minutes * 60
+        seconds = int(sum_seconds + 1)
+        length_text = "{hours:02d}:{minutes:02d}:{seconds:02d}".format(hours = hours, minutes = minutes, seconds = seconds)
+        size_text = "{size:.2f} MB".format(size = out_size)
+        return length_text, size_text
+
 
     def Execute(self):
         self.music_path = self.output_path + "/mp3/"
