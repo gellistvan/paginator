@@ -114,12 +114,12 @@ class BookKeeperWindow(tk.Tk):
         self._background_music_path_entry = ttk.Entry(background_music_path_frame, textvariable=background_music_path_frame.background_music_path)
         self._background_music_path_entry.pack(fill=tk.X, expand=True, side=tk.LEFT, padx=2, ipady=1)
 
-        self._preview_button = ttk.Button(background_music_path_frame, text="Preview", command=self.on_preview_button_pressed)
-        self._preview_button.pack(fill=tk.Y, padx=2, side=tk.LEFT)
-
         self._background_music_path_browse_button = ttk.Button(background_music_path_frame, text="Browse",
                                                                command=lambda: self.on_browse_mp3_button_pressed(background_music_path_frame.background_music_path))
         self._background_music_path_browse_button.pack(fill=tk.Y, padx=2, side=tk.LEFT)
+
+        self._preview_button = ttk.Button(background_music_path_frame, text="▶ Preview", command=self.on_preview_button_pressed)
+        self._preview_button.pack(fill=tk.Y, padx=2, side=tk.LEFT)
 
         volume_frame = ttk.Frame(design_frame)
         volume_frame.pack(padx=0, pady=0, fill='x', expand=True)
@@ -238,9 +238,8 @@ class BookKeeperWindow(tk.Tk):
             tk.messagebox.showinfo(self._APP_NAME, ("Dictionary" if (self._is_find_names_checked.get()) else "Video") + " generated successfully.")
         except:
             tk.messagebox.showerror(self._APP_NAME, "An error occurred.")
-        finally:
-            self.set_progress_bar(0)
 
+        self.set_progress_bar(0)
         self.title(self._APP_NAME)
         self.disable_all_widgets(False)
 
