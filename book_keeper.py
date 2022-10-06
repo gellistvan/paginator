@@ -28,6 +28,7 @@ class BookKeeper:
     actualstep=0.0
     subprogress=0.0
     set_progress_bar_callback: Callable = None
+    is_stop_progressing_requested_callback: Callable = None
 
     def ReportProgress(self):
         if self.set_progress_bar_callback is not None:
@@ -131,12 +132,19 @@ class BookKeeper:
                 speaker.runAndWait()
                 self.ReportProgress()
                 self.subprogress = 0.35
+
+                if self.is_stop_progressing_requested_callback():
+                    return
+
                 if self.image_path:
                     shutil.copyfile(self.image_path, self.music_path + "cover.png")
                     self.GenerateMP4(name)
                     self.sumlen = self.CheckPartLength(name, self.sumlen)
                 index += 1
                 self.ReportProgress()
+
+                if self.is_stop_progressing_requested_callback():
+                    return
 
         self.progress = 0.99
         self.subprogress = 0.0

@@ -31,16 +31,24 @@ class BookKeeperWindow(tk.Tk):
 
     _progress_bar: ttk.Progressbar
     _process_button: ttk.Button
+    _stop_button: ttk.Button
+
+    _is_processing: bool
+    _is_stop_processing_requested: bool
+    _is_exit_requested: bool
 
     _APP_NAME = "Book keeper"
 
     def __init__(self):
         super().__init__()
 
+        self._is_processing = self._is_stop_processing_requested = self._is_exit_requested = False
+
         self.title(self._APP_NAME)
         self.geometry("450x650")
         self.resizable(False, False)
         self.iconbitmap("assets/icons/icons8-audio-book-50.ico")
+        self.protocol("WM_DELETE_WINDOW", self.on_close)
 
         self._init_source_frame()
         self._init_config_frame()
@@ -54,8 +62,12 @@ class BookKeeperWindow(tk.Tk):
         )
         self._progress_bar.pack(fill='x', expand=True, padx=10, pady=10)
 
-        self._process_button = ttk.Button(self, text="Process", command=self.process_button_pressed)
-        self._process_button.pack(fill='x', expand=True, padx=10, pady=10)
+        self._stop_button = ttk.Button(self, text="Stop", command=self.on_stop_button_pressed)
+        self._stop_button.pack(fill='x', padx=10, pady=10, side=tk.RIGHT)
+        self._stop_button.config(state="disabled")
+
+        self._process_button = ttk.Button(self, text="Process", command=self.on_process_button_pressed)
+        self._process_button.pack(fill='x', padx=0, pady=10, side=tk.RIGHT)
 
     def _init_source_frame(self):
         source_frame = ttk.LabelFrame(self, text="Source")
@@ -207,9 +219,10 @@ class BookKeeperWindow(tk.Tk):
         filename = filedialog.askdirectory()
         path.set(filename)
 
-    def process_button_pressed(self):
+    def on_process_button_pressed(self):
         book_keeper = BookKeeper()
         book_keeper.set_progress_bar_callback = self.set_progress_bar
+        book_keeper.is_stop_progressing_requested_callback = self.is_stop_processing_requested
         book_keeper.input_path = self._book_path_entry.get()
         book_keeper.image_path = self._cover_path_entry.get()
         book_keeper.collect_names = (self._is_find_names_checked.get() == "on")
@@ -226,22 +239,47 @@ class BookKeeperWindow(tk.Tk):
         process_thread = Thread(target=lambda: self.process(book_keeper))
         process_thread.start()
 
+    def on_stop_button_pressed(self):
+        self._is_stop_processing_requested = True
+        self.title(self._APP_NAME + " - Stopping...")
+        self._progress_bar.config(mode="indeterminate")
+        self._progress_bar.start()
+
     def set_progress_bar(self, progress: float):
-        self._progress_bar["value"] = progress * 100
+        if not self._is_stop_processing_requested:
+            self._progress_bar["value"] = progress * 100
+
+    def is_stop_processing_requested(self):
+        return self._is_stop_processing_requested
 
     def process(self, bk: BookKeeper):
-        self.disable_all_widgets(True)
+        self.disable_widgets_for_processing(True)
+        self._stop_button.config(state="enabled")
         self.title(self._APP_NAME + " - Processing...")
+        self._is_processing = True
 
         try:
             bk.Execute()
-            tk.messagebox.showinfo(self._APP_NAME, ("Dictionary" if (self._is_find_names_checked.get()) else "Video") + " generated successfully.")
+            self.title(self._APP_NAME)
+            self._stop_button.config(state="disabled")
+            if self._is_stop_processing_requested:
+                # todo(): get to work
+                # if self._is_exit_requested:
+                #   self.destroy()
+                # else:
+                self._progress_bar.stop()
+                self._progress_bar.config(mode="determinate")
+                tk.messagebox.showinfo(self._APP_NAME, "Process aborted.")
+            else:
+                tk.messagebox.showinfo(self._APP_NAME, ("Dictionary" if (self._is_find_names_checked.get()) else "Video") + " generated successfully.")
         except:
+            self.title(self._APP_NAME)
+            self._stop_button.config(state="disabled")
             tk.messagebox.showerror(self._APP_NAME, "An error occurred.")
 
         self.set_progress_bar(0)
-        self.title(self._APP_NAME)
-        self.disable_all_widgets(False)
+        self.disable_widgets_for_processing(False)
+        self._is_processing = self._is_stop_processing_requested = self._is_exit_requested = False
 
     def on_preview_button_pressed(self):
         print("Under construction.")
@@ -259,7 +297,7 @@ class BookKeeperWindow(tk.Tk):
         self._preview_button.config(state=state)
         self._background_music_path_browse_button.config(state=state)
 
-    def disable_all_widgets(self, disable: bool):
+    def disable_widgets_for_processing(self, disable: bool):
         state = "disabled" if disable else "enabled"
 
         self._book_path_entry.config(state=state)
@@ -278,6 +316,13 @@ class BookKeeperWindow(tk.Tk):
         self._output_path_entry.config(state=state)
         self._output_path_browse_button.config(state=state)
         self._process_button.config(state=state)
+
+    def on_close(self):
+        if self._is_processing:
+            self._is_exit_requested = True
+            self.on_stop_button_pressed()
+        else:
+            self.destroy()
 
 
 window = BookKeeperWindow()
