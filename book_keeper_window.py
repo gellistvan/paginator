@@ -317,6 +317,9 @@ class BookKeeperWindow(tk.Tk):
         self._output_path_browse_button.config(state=state)
         self._process_button.config(state=state)
 
+        if not disable:
+            self.on_find_names_check_changed()
+
     def on_close(self):
         if self._is_processing:
             self._is_exit_requested = True
