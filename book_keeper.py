@@ -29,6 +29,7 @@ class BookKeeper:
     subprogress=0.0
     set_progress_bar_callback: Callable = None
     is_stop_progressing_requested_callback: Callable = None
+    CPUs = os.cpu_count()
 
     def ReportProgress(self):
         if self.set_progress_bar_callback is not None:
@@ -53,7 +54,7 @@ class BookKeeper:
                     print(seconds)
 
         rate = '1' if seconds < 150 else '0.1'
-        command="./ffmpeg.exe -loop 1 -framerate 1 -i " + self.music_path + "cover.png -i " + self.music_path + name + ".mp3 -i " + self.background_music + ".mp3 -ss 0 -t " + str(seconds) + " -filter_complex amix=inputs=2:duration=longest:weights=\"" + self.music_weight + "\" -c:v libx264 -r " + rate + " -movflags +faststart " + self.video_path + name + ".mp4"
+        command="./ffmpeg.exe -loop 1 -framerate 1 -i " + self.music_path + "cover.png -i " + self.music_path + name + ".mp3 -i " + self.background_music + ".mp3 -ss 0 -t " + str(seconds) + " -filter_complex amix=inputs=2:duration=longest:weights=\"" + self.music_weight + "\" -c:v libx264 -r " + rate + " -threads " + str(self.CPUs) + " -movflags +faststart " + self.video_path + name + ".mp4"
         subprocess.call(command)
         file_object = open(self.output_path+"/list.txt", 'a', encoding='utf-8')
         file_object.write("file 'mp4/" + name + ".mp4'\n")
