@@ -143,7 +143,7 @@ class BookKeeperWindow(tk.Tk):
         music_volume_frame.pack(padx=0, pady=0, fill='x', expand=True, side=tk.LEFT)
         music_volume_label = ttk.Label(music_volume_frame, text="Music volume:")
         music_volume_label.pack(fill='x', expand=True)
-        self._music_volume_scale = ttk.Scale(music_volume_frame, from_=0, to=5, orient="horizontal")
+        self._music_volume_scale = ttk.Scale(music_volume_frame, from_=0, to=1, orient="horizontal")
         self._music_volume_scale.pack(fill='x', expand=True, padx=5)
         ToolTip(self._music_volume_scale, msg=lambda: VOL_FORMAT.format(self._music_volume_scale.get()))
 
