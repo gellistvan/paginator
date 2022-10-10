@@ -15,7 +15,9 @@ class BookKeeperWindow(tk.Tk):
     _dictionary_book_path_browse_button: ttk.Button
 
     _find_names_check_button: ttk.Checkbutton
+    _sleep_check_button: ttk.Checkbutton
     _is_find_names_checked: tk.StringVar
+    _is_sleep_checked: tk.StringVar
     _music_volume_scale: ttk.Scale
     _voice_volume_scale: ttk.Scale
     _delimiter_sequence_entry: ttk.Entry
@@ -162,6 +164,11 @@ class BookKeeperWindow(tk.Tk):
                                                         variable=self._is_find_names_checked, onvalue="on", offvalue="off")
         self._find_names_check_button.pack(pady=10, fill='both', expand=True)
 
+        self._is_sleep_checked = tk.StringVar()
+        self._sleep_check_button = ttk.Checkbutton(config_frame, text="Put computer to sleep",
+                                                        variable=self._is_sleep_checked, onvalue="on", offvalue="off")
+        self._sleep_check_button.pack(pady=10, fill='both', expand=True)
+
         delimiter_sequence_frame = ttk.Frame(config_frame)
         delimiter_sequence_frame.pack(padx=0, pady=0, fill='x', expand=True)
 
@@ -226,6 +233,7 @@ class BookKeeperWindow(tk.Tk):
         book_keeper.input_path = self._book_path_entry.get()
         book_keeper.image_path = self._cover_path_entry.get()
         book_keeper.collect_names = (self._is_find_names_checked.get() == "on")
+        book_keeper.trigger_sleep = (self._is_sleep_checked.get() == "on")
         book_keeper.music_weight = str(self._voice_volume_scale.get()) + ' ' + str(self._music_volume_scale.get())
         if self._output_path_entry.get():
             book_keeper.output_path = self._output_path_entry.get()
