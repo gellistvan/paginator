@@ -30,6 +30,7 @@ class BookKeeper:
     set_progress_bar_callback: Callable = None
     is_stop_progressing_requested_callback: Callable = None
     CPUs = os.cpu_count()
+    trigger_sleep = False
 
     def ReportProgress(self):
         if self.set_progress_bar_callback is not None:
@@ -59,6 +60,9 @@ class BookKeeper:
         file_object = open(self.output_path+"/list.txt", 'a', encoding='utf-8')
         file_object.write("file 'mp4/" + name + ".mp4'\n")
         print(name + 'video')
+
+    def TriggerSleep(self):
+        os.system("rundll32.exe powrprof.dll,SetSuspendState 0,1,0")
 
     def CheckPartLength(self, name, sumlength) :
         hour = int(sumlength/3600)
@@ -158,6 +162,9 @@ class BookKeeper:
         self.progress = 1.0
         self.actualstep = 0.0
         self.ReportProgress()
+
+        if self.trigger_sleep:
+            self.TriggerSleep()
 
 
 if __name__ == "__main__":
