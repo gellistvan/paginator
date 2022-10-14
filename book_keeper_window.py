@@ -6,6 +6,7 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import winsound
 from threading import Thread
+from pathlib import Path
 
 
 class BookKeeperWindow(tk.Tk):
@@ -13,6 +14,7 @@ class BookKeeperWindow(tk.Tk):
     _book_path_browse_button: ttk.Button
     _dictionary_path_entry: ttk.Entry
     _dictionary_book_path_browse_button: ttk.Button
+    _estimation_label: ttk.Label
 
     _find_names_check_button: ttk.Checkbutton
     _sleep_check_button: ttk.Checkbutton
@@ -32,6 +34,8 @@ class BookKeeperWindow(tk.Tk):
     _output_path_browse_button: ttk.Button
 
     _progress_bar: ttk.Progressbar
+    _progress_percentage_label: ttk.Label
+    _progress_state_label: ttk.Label
     _process_button: ttk.Button
     _stop_button: ttk.Button
 
@@ -47,7 +51,7 @@ class BookKeeperWindow(tk.Tk):
         self._is_processing = self._is_stop_processing_requested = self._is_exit_requested = False
 
         self.title(self._APP_NAME)
-        self.geometry("450x650")
+        self.geometry("450x660")
         self.resizable(False, False)
         self.iconbitmap("assets/icons/icons8-audio-book-50.ico")
         self.protocol("WM_DELETE_WINDOW", self.on_close)
@@ -56,20 +60,9 @@ class BookKeeperWindow(tk.Tk):
         self._init_config_frame()
         self._init_design_frame()
         self._init_output_frame()
+        self._init_process_control_frame()
 
-        self._progress_bar = ttk.Progressbar(
-            self,
-            orient='horizontal',
-            mode='determinate'
-        )
-        self._progress_bar.pack(fill='x', expand=True, padx=10, pady=10)
-
-        self._stop_button = ttk.Button(self, text="Stop", command=self.on_stop_button_pressed)
-        self._stop_button.pack(fill='x', padx=10, pady=10, side=tk.RIGHT)
-        self._stop_button.config(state="disabled")
-
-        self._process_button = ttk.Button(self, text="Process", command=self.on_process_button_pressed)
-        self._process_button.pack(fill='x', padx=0, pady=10, side=tk.RIGHT)
+        self.show_estimation()
 
     def _init_source_frame(self):
         source_frame = ttk.LabelFrame(self, text="Source")
@@ -84,6 +77,7 @@ class BookKeeperWindow(tk.Tk):
         book_path_frame.book_path = tk.StringVar()
         self._book_path_entry = ttk.Entry(book_path_frame, textvariable=book_path_frame.book_path)
         self._book_path_entry.pack(fill=tk.X, expand=True, side=tk.LEFT, padx=2, ipady=1)
+        self._book_path_entry.bind("<FocusOut>", self.show_estimation)
 
         self._book_path_browse_button = ttk.Button(book_path_frame, text="Browse", command=lambda: self.on_browse_txt_button_pressed(book_path_frame.book_path))
         self._book_path_browse_button.pack(fill=tk.BOTH, expand=True, padx=2)
@@ -100,6 +94,9 @@ class BookKeeperWindow(tk.Tk):
 
         self._dictionary_path_browse_button = ttk.Button(dictionary_path_frame, text="Browse", command=lambda: self.on_browse_txt_button_pressed(dictionary_path_frame.dictionary_path))
         self._dictionary_path_browse_button.pack(fill=tk.BOTH, expand=True, padx=2)
+
+        self._estimation_label = ttk.Label(source_frame)
+        self._estimation_label.pack(fill='x', expand=True, pady=5)
 
     def _init_design_frame(self):
         design_frame = ttk.LabelFrame(self, text="Design")
@@ -159,15 +156,15 @@ class BookKeeperWindow(tk.Tk):
         config_frame = ttk.LabelFrame(self, text="Configuration")
         config_frame.pack(padx=10, pady=10, fill='both', expand=True)
 
-        self._is_find_names_checked = tk.StringVar()
+        self._is_find_names_checked = tk.StringVar(config_frame, "off")
         self._find_names_check_button = ttk.Checkbutton(config_frame, text="Find names", command=self.on_find_names_check_changed,
                                                         variable=self._is_find_names_checked, onvalue="on", offvalue="off")
-        self._find_names_check_button.pack(pady=10, fill='both', expand=True)
+        self._find_names_check_button.pack(pady=5, fill='both', expand=True)
 
         self._is_sleep_checked = tk.StringVar()
         self._sleep_check_button = ttk.Checkbutton(config_frame, text="Put computer to sleep",
-                                                        variable=self._is_sleep_checked, onvalue="on", offvalue="off")
-        self._sleep_check_button.pack(pady=10, fill='both', expand=True)
+                                                   variable=self._is_sleep_checked, onvalue="on", offvalue="off")
+        self._sleep_check_button.pack(pady=5, fill='both', expand=True)
 
         delimiter_sequence_frame = ttk.Frame(config_frame)
         delimiter_sequence_frame.pack(padx=0, pady=0, fill='x', expand=True)
@@ -195,6 +192,33 @@ class BookKeeperWindow(tk.Tk):
         self._output_path_browse_button = ttk.Button(output_path_frame, text="Browse", command=lambda: self.on_browse_folder_button_pressed(output_path_frame.output_path))
         self._output_path_browse_button.pack(fill=tk.BOTH, expand=True, padx=2)
 
+    def _init_process_control_frame(self):
+        progress_bar_frame = ttk.Frame(self)
+        progress_bar_frame.pack(padx=5, pady=10, fill='x', expand=True)
+
+        self._progress_bar = ttk.Progressbar(
+            progress_bar_frame,
+            orient='horizontal',
+            mode='determinate'
+        )
+        self._progress_bar.pack(fill=tk.X, expand=True, padx=2, ipady=1)
+
+        self._progress_percentage_label = ttk.Label(progress_bar_frame, text="")
+        self._progress_percentage_label.pack(fill=tk.X, padx=2, side=tk.RIGHT)
+
+        self._progress_state_label = ttk.Label(progress_bar_frame, text="")
+        self._progress_state_label.pack(fill=tk.BOTH, expand=True, side=tk.LEFT)
+
+        process_control_frame = ttk.Frame(self)
+        process_control_frame.pack(padx=5, pady=5, fill='x', expand=True)
+
+        self._stop_button = ttk.Button(process_control_frame, text="Stop", command=self.on_stop_button_pressed)
+        self._stop_button.pack(fill=tk.Y, padx=4, side=tk.RIGHT)
+        self._stop_button.config(state="disabled")
+
+        self._process_button = ttk.Button(process_control_frame, text="Process", command=self.on_process_button_pressed)
+        self._process_button.pack(fill=tk.Y, padx=4, side=tk.RIGHT)
+
     def on_browse_txt_button_pressed(self, path: tk.StringVar):
         filetypes = (
             ("Text files: ", "*.txt"),
@@ -203,6 +227,8 @@ class BookKeeperWindow(tk.Tk):
 
         filename = filedialog.askopenfilename(filetypes=filetypes)
         path.set(filename)
+
+        self.show_estimation()
 
     def on_browse_png_button_pressed(self, path: tk.StringVar):
         filetypes = (
@@ -249,13 +275,15 @@ class BookKeeperWindow(tk.Tk):
 
     def on_stop_button_pressed(self):
         self._is_stop_processing_requested = True
-        self.title(self._APP_NAME + " - Stopping...")
+        self._progress_state_label.config(text="Stopping...")
+        self._progress_percentage_label.config(text="")
         self._progress_bar.config(mode="indeterminate")
         self._progress_bar.start()
 
     def set_progress_bar(self, progress: float):
         if not self._is_stop_processing_requested:
             self._progress_bar["value"] = progress * 100
+            self._progress_percentage_label.config(text=str(int(progress * 100)) + "%")
 
     def is_stop_processing_requested(self):
         return self._is_stop_processing_requested
@@ -263,15 +291,16 @@ class BookKeeperWindow(tk.Tk):
     def process(self, bk: BookKeeper):
         self.disable_widgets_for_processing(True)
         self._stop_button.config(state="enabled")
-        self.title(self._APP_NAME + " - Processing...")
+        self.set_progress_bar(0)
+        self._progress_state_label.config(text="Processing...")
         self._is_processing = True
 
         try:
             bk.Execute()
-            self.title(self._APP_NAME)
+            self._progress_state_label.config(text="")
             self._stop_button.config(state="disabled")
             if self._is_stop_processing_requested:
-                # todo(): get to work
+                # todo(): destroy window when processing stopped
                 # if self._is_exit_requested:
                 #   self.destroy()
                 # else:
@@ -281,11 +310,14 @@ class BookKeeperWindow(tk.Tk):
             else:
                 tk.messagebox.showinfo(self._APP_NAME, ("Dictionary" if (self._is_find_names_checked.get()) else "Video") + " generated successfully.")
         except:
-            self.title(self._APP_NAME)
+            self._progress_state_label.config(text="")
+            self._progress_percentage_label.config(text="")
             self._stop_button.config(state="disabled")
             tk.messagebox.showerror(self._APP_NAME, "An error occurred.")
 
         self.set_progress_bar(0)
+        self._progress_percentage_label.config(text="")
+        self._progress_state_label.config(text="")
         self.disable_widgets_for_processing(False)
         self._is_processing = self._is_stop_processing_requested = self._is_exit_requested = False
 
@@ -304,6 +336,9 @@ class BookKeeperWindow(tk.Tk):
         self._background_music_path_entry.config(state=state)
         self._preview_button.config(state=state)
         self._background_music_path_browse_button.config(state=state)
+        self._sleep_check_button.config(state=state)
+
+        self.show_estimation()
 
     def disable_widgets_for_processing(self, disable: bool):
         state = "disabled" if disable else "enabled"
@@ -324,6 +359,7 @@ class BookKeeperWindow(tk.Tk):
         self._output_path_entry.config(state=state)
         self._output_path_browse_button.config(state=state)
         self._process_button.config(state=state)
+        self._sleep_check_button.config(state=state)
 
         if not disable:
             self.on_find_names_check_changed()
@@ -334,6 +370,19 @@ class BookKeeperWindow(tk.Tk):
             self.on_stop_button_pressed()
         else:
             self.destroy()
+
+    def show_estimation(self, event=None):
+        label_text = "Estimated video length and size: "
+
+        if self._is_find_names_checked.get() == "off" and self._book_path_entry.get() != "" and Path(self._book_path_entry.get()).is_file():
+            book_keeper = BookKeeper()
+            book_keeper.input_path = self._book_path_entry.get()
+            book_keeper_estimation = book_keeper.Estimate()
+            label_text = label_text + book_keeper_estimation[0] + " / " + book_keeper_estimation[1]
+        else:
+            label_text = label_text + "n/a"
+
+        self._estimation_label.config(text=label_text)
 
 
 window = BookKeeperWindow()

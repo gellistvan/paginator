@@ -117,10 +117,12 @@ class BookKeeper:
 
                     for line in pronunciation:
                         values = line.split('\t')
-                        input_file=input_file.replace(values[0].lstrip(), values[1].rstrip())
+                        input_file = input_file.replace(values[0].lstrip(), values[1].rstrip())
 
-            if self.collect_names :
+            if self.collect_names:
                 CollectNames(input_file, self.output_path)
+                self.progress = 1
+                self.ReportProgress()
                 return
 
             self.sumchars = len(input_file)
@@ -138,7 +140,7 @@ class BookKeeper:
                 self.ReportProgress()
                 self.subprogress = 0.35
 
-                if self.is_stop_progressing_requested_callback():
+                if self.is_stop_progressing_requested_callback and self.is_stop_progressing_requested_callback():
                     return
 
                 if self.image_path:
@@ -148,7 +150,7 @@ class BookKeeper:
                 index += 1
                 self.ReportProgress()
 
-                if self.is_stop_progressing_requested_callback():
+                if self.is_stop_progressing_requested_callback and self.is_stop_progressing_requested_callback():
                     return
 
         self.progress = 0.99
