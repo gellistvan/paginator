@@ -98,6 +98,29 @@ class BookKeeperWindow(tk.Tk):
         self._estimation_label = ttk.Label(source_frame)
         self._estimation_label.pack(fill='x', expand=True, pady=5)
 
+    def _init_config_frame(self):
+        config_frame = ttk.LabelFrame(self, text="Configuration")
+        config_frame.pack(padx=10, pady=10, fill='both', expand=True)
+
+        self._is_find_names_checked = tk.StringVar(config_frame, "off")
+        self._find_names_check_button = ttk.Checkbutton(config_frame, text="Find names", command=self.on_find_names_check_changed,
+                                                        variable=self._is_find_names_checked, onvalue="on", offvalue="off")
+        self._find_names_check_button.pack(pady=5, fill='both', expand=True)
+
+        self._is_sleep_checked = tk.StringVar()
+        self._sleep_check_button = ttk.Checkbutton(config_frame, text="Put computer to sleep",
+                                                   variable=self._is_sleep_checked, onvalue="on", offvalue="off")
+        self._sleep_check_button.pack(pady=5, fill='both', expand=True)
+
+        delimiter_sequence_frame = ttk.Frame(config_frame)
+        delimiter_sequence_frame.pack(padx=0, pady=0, fill='x', expand=True)
+
+        delimiter_sequence_label = ttk.Label(delimiter_sequence_frame, text="Delimiter sequence:")
+        delimiter_sequence_label.pack(fill='x', expand=True)
+
+        self._delimiter_sequence_entry = ttk.Entry(delimiter_sequence_frame)
+        self._delimiter_sequence_entry.pack(fill='x', expand=True, padx=2, ipady=1)
+
     def _init_design_frame(self):
         design_frame = ttk.LabelFrame(self, text="Design")
         design_frame.pack(padx=10, pady=10, fill='both', expand=True)
@@ -151,29 +174,6 @@ class BookKeeperWindow(tk.Tk):
         self._voice_volume_scale = ttk.Scale(voice_volume_frame, from_=0, to=5, orient="horizontal")
         self._voice_volume_scale.pack(fill='x', expand=True, padx=5)
         ToolTip(self._voice_volume_scale, msg=lambda: VOL_FORMAT.format(self._voice_volume_scale.get()))
-
-    def _init_config_frame(self):
-        config_frame = ttk.LabelFrame(self, text="Configuration")
-        config_frame.pack(padx=10, pady=10, fill='both', expand=True)
-
-        self._is_find_names_checked = tk.StringVar(config_frame, "off")
-        self._find_names_check_button = ttk.Checkbutton(config_frame, text="Find names", command=self.on_find_names_check_changed,
-                                                        variable=self._is_find_names_checked, onvalue="on", offvalue="off")
-        self._find_names_check_button.pack(pady=5, fill='both', expand=True)
-
-        self._is_sleep_checked = tk.StringVar()
-        self._sleep_check_button = ttk.Checkbutton(config_frame, text="Put computer to sleep",
-                                                   variable=self._is_sleep_checked, onvalue="on", offvalue="off")
-        self._sleep_check_button.pack(pady=5, fill='both', expand=True)
-
-        delimiter_sequence_frame = ttk.Frame(config_frame)
-        delimiter_sequence_frame.pack(padx=0, pady=0, fill='x', expand=True)
-
-        delimiter_sequence_label = ttk.Label(delimiter_sequence_frame, text="Delimiter sequence:")
-        delimiter_sequence_label.pack(fill='x', expand=True)
-
-        self._delimiter_sequence_entry = ttk.Entry(delimiter_sequence_frame)
-        self._delimiter_sequence_entry.pack(fill='x', expand=True, padx=2, ipady=1)
 
     def _init_output_frame(self):
         output_frame = ttk.LabelFrame(self, text="Output")
@@ -308,7 +308,7 @@ class BookKeeperWindow(tk.Tk):
                 self._progress_bar.config(mode="determinate")
                 tk.messagebox.showinfo(self._APP_NAME, "Process aborted.")
             else:
-                tk.messagebox.showinfo(self._APP_NAME, ("Dictionary" if (self._is_find_names_checked.get()) else "Video") + " generated successfully.")
+                tk.messagebox.showinfo(self._APP_NAME, ("Dictionary" if (self._is_find_names_checked.get() == "on") else "Video") + " generated successfully.")
         except:
             self._progress_state_label.config(text="")
             self._progress_percentage_label.config(text="")
