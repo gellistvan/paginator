@@ -91,9 +91,6 @@ class BookKeeper:
 
 
     def Execute(self):
-        if self.trigger_sleep:
-            print('sleep')
-
         self.music_path = self.output_path + "/mp3/"
         self.temp_path = self.output_path + "/tmp/"
 
