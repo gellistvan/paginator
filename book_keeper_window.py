@@ -359,7 +359,6 @@ class BookKeeperWindow(tk.Tk):
         self._output_path_entry.config(state=state)
         self._output_path_browse_button.config(state=state)
         self._process_button.config(state=state)
-        self._sleep_check_button.config(state=state)
 
         if not disable:
             self.on_find_names_check_changed()
