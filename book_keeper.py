@@ -116,9 +116,10 @@ class BookKeeper:
                       + "-filter_complex amix=inputs=2:duration=shortest:weights=\"" + self.music_weight + "\" -f wav " + self.temp_folder_path + "\\" + self.PREVIEW_FILENAME
             completed_proc = subprocess.run(command)
 
-            # todo(): display error
             if completed_proc.returncode == 0:
                 result_path = self.temp_folder_path + "\\" + self.PREVIEW_FILENAME
+            else:
+                raise Exception("An error occurred while generating preview.\nffmpeg error code: " + str(completed_proc.returncode))
 
         return result_path
 
