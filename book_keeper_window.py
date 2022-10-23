@@ -4,9 +4,9 @@ from tktooltip import ToolTip
 
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
-import winsound
-from threading import Thread
+import vlc
 from pathlib import Path
+from threading import Thread, Lock
 
 
 class BookKeeperWindow(tk.Tk):
@@ -43,6 +43,9 @@ class BookKeeperWindow(tk.Tk):
     _is_stop_processing_requested: bool
     _is_exit_requested: bool
 
+    _media_player: vlc.MediaPlayer
+    _preview_generator_mutex: Lock
+
     _APP_NAME = "Book keeper"
 
     def __init__(self):
@@ -63,6 +66,9 @@ class BookKeeperWindow(tk.Tk):
         self._init_process_control_frame()
 
         self.show_estimation()
+
+        self._preview_generator_mutex = Lock()
+        self._media_player = None
 
     def _init_source_frame(self):
         source_frame = ttk.LabelFrame(self, text="Source")
@@ -339,8 +345,25 @@ class BookKeeperWindow(tk.Tk):
         self._is_processing = self._is_stop_processing_requested = self._is_exit_requested = False
 
     def on_preview_button_pressed(self):
-        print("Under construction.")
-        winsound.PlaySound("SystemExclamation", winsound.SND_ALIAS)
+        self._preview_generator_mutex.acquire()
+
+        if self._media_player and self._media_player.is_playing():
+            self._media_player.stop()
+
+        book_keeper = BookKeeper()
+        book_keeper.background_music = ""
+        if Path(self._background_music_path_entry.get()).is_file():
+            book_keeper.background_music = self._background_music_path_entry.get()
+            book_keeper.music_weight = str(self._voice_volume_scale.get()) + ' ' + str(self._music_volume_scale.get())
+
+        try:
+            preview_path = book_keeper.GeneratePreview()
+            self._media_player = vlc.MediaPlayer(preview_path)
+            self._media_player.play()
+        except Exception as e:
+            tk.messagebox.showerror(self._APP_NAME, e)
+
+        self._preview_generator_mutex.release()
 
     def on_find_names_check_changed(self):
         state = "disabled" if (self._is_find_names_checked.get() == "on") else "enabled"

@@ -32,6 +32,19 @@ class BookKeeper:
     CPUs = os.cpu_count()
     trigger_sleep = False
 
+    temp_folder_path: str
+    PREVIEW_FILENAME = "preview.mp3"
+    SPEECH_PREVIEW_FILENAME = "speech_preview.mp3"
+
+    def __init__(self):
+        self.temp_folder_path = os.path.expandvars("%TEMP%") + "\\book_keeper"
+        if not os.path.isdir(self.temp_folder_path):
+            try:
+                os.mkdir(self.temp_folder_path)
+            except Exception as e:
+                print(e, file=sys.stderr)
+                self.temp_folder_path = "."
+
     def ReportProgress(self):
         if self.set_progress_bar_callback is not None:
             self.set_progress_bar_callback(int(100*(self.progress + self.subprogress * self.actualstep))/100.0)
@@ -89,6 +102,25 @@ class BookKeeper:
         size_text = "{size:.2f} MB".format(size = out_size)
         return length_text, size_text
 
+    def GeneratePreview(self):
+        SPEECH_PREVIEW_PATH = self.temp_folder_path + "\\" + self.SPEECH_PREVIEW_FILENAME
+        result_path = SPEECH_PREVIEW_PATH
+
+        if not os.path.isfile(SPEECH_PREVIEW_PATH):
+            speaker = init_speaker()
+            speaker.save_to_file("A szöveget felolvassa: Microsoft Szabolcs.", SPEECH_PREVIEW_PATH)
+            speaker.runAndWait()
+
+        if os.path.isfile(self.background_music):
+            command = "./ffmpeg.exe -y -i \"" + SPEECH_PREVIEW_PATH + "\" -i \"" + self.background_music + "\" " \
+                      + "-filter_complex amix=inputs=2:duration=shortest:weights=\"" + self.music_weight + "\" " + self.temp_folder_path + "\\" + self.PREVIEW_FILENAME
+            completed_proc = subprocess.run(command)
+
+            # todo(): display error
+            if completed_proc.returncode == 0:
+                result_path = self.temp_folder_path + "\\" + self.PREVIEW_FILENAME
+
+        return result_path
 
     def Execute(self):
         self.music_path = self.output_path + "/mp3/"
