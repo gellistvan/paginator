@@ -33,8 +33,8 @@ class BookKeeper:
     trigger_sleep = False
 
     temp_folder_path: str
-    PREVIEW_FILENAME = "preview.mp3"
-    SPEECH_PREVIEW_FILENAME = "speech_preview.mp3"
+    PREVIEW_FILENAME = "preview.wav"
+    SPEECH_PREVIEW_FILENAME = "speech_preview.wav"
 
     def __init__(self):
         self.temp_folder_path = os.path.expandvars("%TEMP%") + "\\book_keeper"
@@ -113,7 +113,7 @@ class BookKeeper:
 
         if os.path.isfile(self.background_music):
             command = "./ffmpeg.exe -y -i \"" + SPEECH_PREVIEW_PATH + "\" -i \"" + self.background_music + "\" " \
-                      + "-filter_complex amix=inputs=2:duration=shortest:weights=\"" + self.music_weight + "\" " + self.temp_folder_path + "\\" + self.PREVIEW_FILENAME
+                      + "-filter_complex amix=inputs=2:duration=shortest:weights=\"" + self.music_weight + "\" -f wav " + self.temp_folder_path + "\\" + self.PREVIEW_FILENAME
             completed_proc = subprocess.run(command)
 
             # todo(): display error

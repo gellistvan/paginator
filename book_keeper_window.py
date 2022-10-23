@@ -4,7 +4,7 @@ from tktooltip import ToolTip
 
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
-import vlc
+import winsound
 from pathlib import Path
 from threading import Thread, Lock
 
@@ -43,7 +43,6 @@ class BookKeeperWindow(tk.Tk):
     _is_stop_processing_requested: bool
     _is_exit_requested: bool
 
-    _media_player: vlc.MediaPlayer
     _preview_generator_mutex: Lock
 
     _APP_NAME = "Book keeper"
@@ -68,7 +67,6 @@ class BookKeeperWindow(tk.Tk):
         self.show_estimation()
 
         self._preview_generator_mutex = Lock()
-        self._media_player = None
 
     def _init_source_frame(self):
         source_frame = ttk.LabelFrame(self, text="Source")
@@ -347,9 +345,6 @@ class BookKeeperWindow(tk.Tk):
     def on_preview_button_pressed(self):
         self._preview_generator_mutex.acquire()
 
-        if self._media_player and self._media_player.is_playing():
-            self._media_player.stop()
-
         book_keeper = BookKeeper()
         book_keeper.background_music = ""
         if Path(self._background_music_path_entry.get()).is_file():
@@ -358,8 +353,7 @@ class BookKeeperWindow(tk.Tk):
 
         try:
             preview_path = book_keeper.GeneratePreview()
-            self._media_player = vlc.MediaPlayer(preview_path)
-            self._media_player.play()
+            winsound.PlaySound(preview_path, winsound.SND_ASYNC)
         except Exception as e:
             tk.messagebox.showerror(self._APP_NAME, e)
 
