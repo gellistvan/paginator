@@ -166,6 +166,7 @@ class BookKeeperWindow(tk.Tk):
         self._music_volume_scale = ttk.Scale(music_volume_frame, from_=0, to=1, orient="horizontal")
         self._music_volume_scale.pack(fill='x', expand=True, padx=5)
         ToolTip(self._music_volume_scale, msg=lambda: VOL_FORMAT.format(self._music_volume_scale.get()))
+        self._music_volume_scale.bind("<MouseWheel>", lambda event: self.on_mouse_wheel_scrolled_within_volume_scale(event, self._music_volume_scale))
 
         voice_volume_frame = ttk.Frame(volume_frame)
         voice_volume_frame.pack(padx=0, pady=0, fill='x', expand=True, side=tk.RIGHT)
@@ -174,6 +175,7 @@ class BookKeeperWindow(tk.Tk):
         self._voice_volume_scale = ttk.Scale(voice_volume_frame, from_=0, to=5, orient="horizontal")
         self._voice_volume_scale.pack(fill='x', expand=True, padx=5)
         ToolTip(self._voice_volume_scale, msg=lambda: VOL_FORMAT.format(self._voice_volume_scale.get()))
+        self._voice_volume_scale.bind("<MouseWheel>", lambda event: self.on_mouse_wheel_scrolled_within_volume_scale(event, self._voice_volume_scale))
 
     def _init_output_frame(self):
         output_frame = ttk.LabelFrame(self, text="Output")
@@ -279,6 +281,21 @@ class BookKeeperWindow(tk.Tk):
         self._progress_percentage_label.config(text="")
         self._progress_bar.config(mode="indeterminate")
         self._progress_bar.start()
+
+    def on_mouse_wheel_scrolled_within_volume_scale(self, event, vol_scale):
+        SCROLL_DELTA = event.delta / 120
+        STEP = abs(vol_scale.cget("to") - vol_scale.cget("from")) / 10
+
+        if SCROLL_DELTA > 0:
+            if vol_scale.get() + STEP > vol_scale.cget("to"):
+                vol_scale.set(vol_scale.cget("to"))
+            else:
+                vol_scale.set(vol_scale.get() + STEP)
+        else:
+            if vol_scale.get() - STEP < vol_scale.cget("from"):
+                vol_scale.set(vol_scale.cget("from"))
+            else:
+                vol_scale.set(vol_scale.get() - STEP)
 
     def set_progress_bar(self, progress: float):
         if not self._is_stop_processing_requested:
