@@ -6,7 +6,7 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import winsound
 from pathlib import Path
-from threading import Thread, Lock
+from threading import Thread
 
 
 class BookKeeperWindow(tk.Tk):
@@ -43,8 +43,6 @@ class BookKeeperWindow(tk.Tk):
     _is_stop_processing_requested: bool
     _is_exit_requested: bool
 
-    _preview_generator_mutex: Lock
-
     _APP_NAME = "Book keeper"
 
     def __init__(self):
@@ -65,8 +63,6 @@ class BookKeeperWindow(tk.Tk):
         self._init_process_control_frame()
 
         self.show_estimation()
-
-        self._preview_generator_mutex = Lock()
 
     def _init_source_frame(self):
         source_frame = ttk.LabelFrame(self, text="Source")
@@ -343,8 +339,6 @@ class BookKeeperWindow(tk.Tk):
         self._is_processing = self._is_stop_processing_requested = self._is_exit_requested = False
 
     def on_preview_button_pressed(self):
-        self._preview_generator_mutex.acquire()
-
         book_keeper = BookKeeper()
         book_keeper.background_music = ""
         if Path(self._background_music_path_entry.get()).is_file():
@@ -356,8 +350,6 @@ class BookKeeperWindow(tk.Tk):
             winsound.PlaySound(preview_path, winsound.SND_ASYNC)
         except Exception as e:
             tk.messagebox.showerror(self._APP_NAME, e)
-
-        self._preview_generator_mutex.release()
 
     def on_find_names_check_changed(self):
         state = "disabled" if (self._is_find_names_checked.get() == "on") else "enabled"
