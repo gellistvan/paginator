@@ -45,6 +45,12 @@ class BookKeeperWindow(tk.Tk):
 
     _APP_NAME = "Book keeper"
 
+    _filedialog_types = {
+        "text": (("Text files: ", "*.txt"), ("All files: ", "*.*")),
+        "picture": (("PNG files: ", "*.png"), ("All files: ", "*.*")),
+        "audio": (("MP3 files: ", "*.mp3"), ("All files: ", "*.*"))
+    }
+
     def __init__(self):
         super().__init__()
 
@@ -79,7 +85,8 @@ class BookKeeperWindow(tk.Tk):
         self._book_path_entry.pack(fill=tk.X, expand=True, side=tk.LEFT, padx=2, ipady=1)
         self._book_path_entry.bind("<FocusOut>", self.show_estimation)
 
-        self._book_path_browse_button = ttk.Button(book_path_frame, text="Browse", command=lambda: self.on_browse_txt_button_pressed(book_path_frame.book_path))
+        self._book_path_browse_button = ttk.Button(book_path_frame, text="Browse",
+                                                   command=lambda: self.on_file_browser_button_pressed("text", book_path_frame.book_path, self._book_path_entry))
         self._book_path_browse_button.pack(fill=tk.BOTH, expand=True, padx=2)
 
         dictionary_path_frame = ttk.Frame(source_frame)
@@ -92,7 +99,8 @@ class BookKeeperWindow(tk.Tk):
         self._dictionary_path_entry = ttk.Entry(dictionary_path_frame, textvariable=dictionary_path_frame.dictionary_path)
         self._dictionary_path_entry.pack(fill=tk.X, expand=True, side=tk.LEFT, padx=2, ipady=1)
 
-        self._dictionary_path_browse_button = ttk.Button(dictionary_path_frame, text="Browse", command=lambda: self.on_browse_txt_button_pressed(dictionary_path_frame.dictionary_path))
+        self._dictionary_path_browse_button = ttk.Button(dictionary_path_frame, text="Browse",
+                                                         command=lambda: self.on_file_browser_button_pressed("text", dictionary_path_frame.dictionary_path, self._dictionary_path_entry))
         self._dictionary_path_browse_button.pack(fill=tk.BOTH, expand=True, padx=2)
 
         self._estimation_label = ttk.Label(source_frame)
@@ -119,7 +127,7 @@ class BookKeeperWindow(tk.Tk):
         delimiter_sequence_label.pack(fill='x', expand=True)
 
         self._delimiter_sequence_entry = ttk.Entry(delimiter_sequence_frame)
-        self._delimiter_sequence_entry.pack(fill='x', expand=True, padx=2, ipady=1)
+        self._delimiter_sequence_entry.pack(padx=2, ipady=1, side=tk.LEFT)
 
     def _init_design_frame(self):
         design_frame = ttk.LabelFrame(self, text="Design")
@@ -135,7 +143,8 @@ class BookKeeperWindow(tk.Tk):
         self._cover_path_entry = ttk.Entry(cover_path_frame, textvariable=cover_path_frame.cover_path)
         self._cover_path_entry.pack(fill=tk.X, expand=True, side=tk.LEFT, padx=2, ipady=1)
 
-        self._cover_path_browse_button = ttk.Button(cover_path_frame, text="Browse", command=lambda: self.on_browse_png_button_pressed(cover_path_frame.cover_path))
+        self._cover_path_browse_button = ttk.Button(cover_path_frame, text="Browse",
+                                                    command=lambda: self.on_file_browser_button_pressed("picture", cover_path_frame.cover_path, self._cover_path_entry))
         self._cover_path_browse_button.pack(fill=tk.BOTH, expand=True, padx=2)
 
         background_music_path_frame = ttk.Frame(design_frame)
@@ -148,8 +157,9 @@ class BookKeeperWindow(tk.Tk):
         self._background_music_path_entry = ttk.Entry(background_music_path_frame, textvariable=background_music_path_frame.background_music_path)
         self._background_music_path_entry.pack(fill=tk.X, expand=True, side=tk.LEFT, padx=2, ipady=1)
 
-        self._background_music_path_browse_button = ttk.Button(background_music_path_frame, text="Browse",
-                                                               command=lambda: self.on_browse_mp3_button_pressed(background_music_path_frame.background_music_path))
+        self._background_music_path_browse_button\
+            = ttk.Button(background_music_path_frame, text="Browse",
+                         command=lambda: self.on_file_browser_button_pressed("audio", background_music_path_frame.background_music_path, self._background_music_path_entry))
         self._background_music_path_browse_button.pack(fill=tk.Y, padx=2, side=tk.LEFT)
 
         self._preview_button = ttk.Button(background_music_path_frame, text="▶ Preview", command=self.on_preview_button_pressed)
@@ -191,7 +201,8 @@ class BookKeeperWindow(tk.Tk):
         self._output_path_entry = ttk.Entry(output_path_frame, textvariable=output_path_frame.output_path)
         self._output_path_entry.pack(fill=tk.X, expand=True, side=tk.LEFT, padx=2, ipady=1)
 
-        self._output_path_browse_button = ttk.Button(output_path_frame, text="Browse", command=lambda: self.on_browse_folder_button_pressed(output_path_frame.output_path))
+        self._output_path_browse_button = ttk.Button(output_path_frame, text="Browse",
+                                                     command=lambda: self.on_folder_browser_button_pressed(output_path_frame.output_path, self._output_path_entry))
         self._output_path_browse_button.pack(fill=tk.BOTH, expand=True, padx=2)
 
     def _init_process_control_frame(self):
@@ -221,38 +232,18 @@ class BookKeeperWindow(tk.Tk):
         self._process_button = ttk.Button(process_control_frame, text="Process", command=self.on_process_button_pressed)
         self._process_button.pack(fill=tk.Y, padx=4, side=tk.RIGHT)
 
-    def on_browse_txt_button_pressed(self, path: tk.StringVar):
-        filetypes = (
-            ("Text files: ", "*.txt"),
-            ("All files: ", "*.*")
-        )
-
-        filename = filedialog.askopenfilename(filetypes=filetypes)
+    def on_file_browser_button_pressed(self, file_type: str, path: tk.StringVar, entry: ttk.Entry):
+        filename = filedialog.askopenfilename(filetypes=self._filedialog_types[file_type])
         path.set(filename)
+        entry.xview_moveto(1)
 
-        self.show_estimation()
+        if file_type == "text":
+            self.show_estimation()
 
-    def on_browse_png_button_pressed(self, path: tk.StringVar):
-        filetypes = (
-            ("PNG files: ", "*.png"),
-            ("All files: ", "*.*")
-        )
-
-        filename = filedialog.askopenfilename(filetypes=filetypes)
-        path.set(filename)
-
-    def on_browse_mp3_button_pressed(self, path: tk.StringVar):
-        filetypes = (
-            ("MP3 files: ", "*.mp3"),
-            ("All files: ", "*.*")
-        )
-
-        filename = filedialog.askopenfilename(filetypes=filetypes)
-        path.set(filename)
-
-    def on_browse_folder_button_pressed(self, path: tk.StringVar):
+    def on_folder_browser_button_pressed(self, path: tk.StringVar, entry: ttk.Entry):
         filename = filedialog.askdirectory()
         path.set(filename)
+        entry.xview_moveto(1)
 
     def on_mouse_wheel_scrolled_within_volume_scale(self, event, vol_scale):
         SCROLL_DELTA = event.delta / 120
