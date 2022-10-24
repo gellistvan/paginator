@@ -254,34 +254,6 @@ class BookKeeperWindow(tk.Tk):
         filename = filedialog.askdirectory()
         path.set(filename)
 
-    def on_process_button_pressed(self):
-        book_keeper = BookKeeper()
-        book_keeper.set_progress_bar_callback = self.set_progress_bar
-        book_keeper.is_stop_progressing_requested_callback = self.is_stop_processing_requested
-        book_keeper.input_path = self._book_path_entry.get()
-        book_keeper.image_path = self._cover_path_entry.get()
-        book_keeper.collect_names = (self._is_find_names_checked.get() == "on")
-        book_keeper.trigger_sleep = (self._is_sleep_checked.get() == "on")
-        book_keeper.music_weight = str(self._voice_volume_scale.get()) + ' ' + str(self._music_volume_scale.get())
-        if self._output_path_entry.get():
-            book_keeper.output_path = self._output_path_entry.get()
-        if self._background_music_path_entry.get():
-            book_keeper.background_music = self._background_music_path_entry.get().replace(".mp3", "")
-        if self._dictionary_path_entry.get():
-            book_keeper.dictionary_path = self._dictionary_path_entry.get()
-        if self._delimiter_sequence_entry.get():
-            book_keeper.chapter_delimiter = self._delimiter_sequence_entry.get()
-
-        process_thread = Thread(target=lambda: self.process(book_keeper))
-        process_thread.start()
-
-    def on_stop_button_pressed(self):
-        self._is_stop_processing_requested = True
-        self._progress_state_label.config(text="Stopping...")
-        self._progress_percentage_label.config(text="")
-        self._progress_bar.config(mode="indeterminate")
-        self._progress_bar.start()
-
     def on_mouse_wheel_scrolled_within_volume_scale(self, event, vol_scale):
         SCROLL_DELTA = event.delta / 120
         STEP = abs(vol_scale.cget("to") - vol_scale.cget("from")) / 10
@@ -297,13 +269,69 @@ class BookKeeperWindow(tk.Tk):
             else:
                 vol_scale.set(vol_scale.get() - STEP)
 
-    def set_progress_bar(self, progress: float):
-        if not self._is_stop_processing_requested:
-            self._progress_bar["value"] = progress * 100
-            self._progress_percentage_label.config(text=str(int(progress * 100)) + "%")
+    def on_preview_button_pressed(self):
+        book_keeper = BookKeeper()
+        book_keeper.background_music = ""
+        if Path(self._background_music_path_entry.get()).is_file():
+            book_keeper.background_music = self._background_music_path_entry.get()
+            book_keeper.music_weight = str(self._voice_volume_scale.get()) + ' ' + str(self._music_volume_scale.get())
 
-    def is_stop_processing_requested(self):
-        return self._is_stop_processing_requested
+        try:
+            preview_path = book_keeper.GeneratePreview()
+            winsound.PlaySound(preview_path, winsound.SND_ASYNC)
+        except Exception as e:
+            tk.messagebox.showerror(self._APP_NAME, e)
+
+    def on_find_names_check_changed(self):
+        state = "disabled" if (self._is_find_names_checked.get() == "on") else "enabled"
+
+        self._music_volume_scale.config(state=state)
+        self._voice_volume_scale.config(state=state)
+        self._delimiter_sequence_entry.config(state=state)
+        self._cover_path_entry.config(state=state)
+        self._cover_path_browse_button.config(state=state)
+        self._background_music_path_entry.config(state=state)
+        self._preview_button.config(state=state)
+        self._background_music_path_browse_button.config(state=state)
+        self._sleep_check_button.config(state=state)
+
+        self.show_estimation()
+
+    def on_close(self):
+        if self._is_processing:
+            self._is_exit_requested = True
+            self.on_stop_button_pressed()
+        else:
+            self.destroy()
+
+    def on_stop_button_pressed(self):
+        self._is_stop_processing_requested = True
+        self._progress_state_label.config(text="Stopping...")
+        self._progress_percentage_label.config(text="")
+        self._progress_bar.config(mode="indeterminate")
+        self._progress_bar.start()
+
+    def on_process_button_pressed(self):
+        book_keeper = BookKeeper()
+        book_keeper.set_progress_bar_callback = self.set_progress_bar
+        book_keeper.is_stop_progressing_requested_callback = self.is_stop_processing_requested
+        book_keeper.input_path = self._book_path_entry.get()
+        book_keeper.image_path = self._cover_path_entry.get()
+        book_keeper.collect_names = (self._is_find_names_checked.get() == "on")
+        book_keeper.trigger_sleep = (self._is_sleep_checked.get() == "on")
+        book_keeper.music_weight = str(self._voice_volume_scale.get()) + ' ' + str(
+            self._music_volume_scale.get())
+        if self._output_path_entry.get():
+            book_keeper.output_path = self._output_path_entry.get()
+        if self._background_music_path_entry.get():
+            book_keeper.background_music = self._background_music_path_entry.get().replace(".mp3", "")
+        if self._dictionary_path_entry.get():
+            book_keeper.dictionary_path = self._dictionary_path_entry.get()
+        if self._delimiter_sequence_entry.get():
+            book_keeper.chapter_delimiter = self._delimiter_sequence_entry.get()
+
+        process_thread = Thread(target=lambda: self.process(book_keeper))
+        process_thread.start()
 
     def process(self, bk: BookKeeper):
         self.disable_widgets_for_processing(True)
@@ -338,33 +366,13 @@ class BookKeeperWindow(tk.Tk):
         self.disable_widgets_for_processing(False)
         self._is_processing = self._is_stop_processing_requested = self._is_exit_requested = False
 
-    def on_preview_button_pressed(self):
-        book_keeper = BookKeeper()
-        book_keeper.background_music = ""
-        if Path(self._background_music_path_entry.get()).is_file():
-            book_keeper.background_music = self._background_music_path_entry.get()
-            book_keeper.music_weight = str(self._voice_volume_scale.get()) + ' ' + str(self._music_volume_scale.get())
+    def is_stop_processing_requested(self):
+        return self._is_stop_processing_requested
 
-        try:
-            preview_path = book_keeper.GeneratePreview()
-            winsound.PlaySound(preview_path, winsound.SND_ASYNC)
-        except Exception as e:
-            tk.messagebox.showerror(self._APP_NAME, e)
-
-    def on_find_names_check_changed(self):
-        state = "disabled" if (self._is_find_names_checked.get() == "on") else "enabled"
-
-        self._music_volume_scale.config(state=state)
-        self._voice_volume_scale.config(state=state)
-        self._delimiter_sequence_entry.config(state=state)
-        self._cover_path_entry.config(state=state)
-        self._cover_path_browse_button.config(state=state)
-        self._background_music_path_entry.config(state=state)
-        self._preview_button.config(state=state)
-        self._background_music_path_browse_button.config(state=state)
-        self._sleep_check_button.config(state=state)
-
-        self.show_estimation()
+    def set_progress_bar(self, progress: float):
+        if not self._is_stop_processing_requested:
+            self._progress_bar["value"] = progress * 100
+            self._progress_percentage_label.config(text=str(int(progress * 100)) + "%")
 
     def disable_widgets_for_processing(self, disable: bool):
         state = "disabled" if disable else "enabled"
@@ -388,13 +396,6 @@ class BookKeeperWindow(tk.Tk):
 
         if not disable:
             self.on_find_names_check_changed()
-
-    def on_close(self):
-        if self._is_processing:
-            self._is_exit_requested = True
-            self.on_stop_button_pressed()
-        else:
-            self.destroy()
 
     def show_estimation(self, event=None):
         label_text = "Estimated video length and size: "
