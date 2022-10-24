@@ -103,16 +103,17 @@ class BookKeeper:
         return length_text, size_text
 
     def GeneratePreview(self):
+        SAMPLE_TEXT = "A szöveget felolvassa: Microsoft Szabolcs."
         SPEECH_PREVIEW_PATH = self.temp_folder_path + "\\" + self.SPEECH_PREVIEW_FILENAME
         result_path = SPEECH_PREVIEW_PATH
 
         if not os.path.isfile(SPEECH_PREVIEW_PATH):
             speaker = init_speaker()
-            speaker.save_to_file("A szöveget felolvassa: Microsoft Szabolcs.", SPEECH_PREVIEW_PATH)
+            speaker.save_to_file(SAMPLE_TEXT, SPEECH_PREVIEW_PATH)
             speaker.runAndWait()
 
         if os.path.isfile(self.background_music):
-            command = "./ffmpeg.exe -y -i \"" + SPEECH_PREVIEW_PATH + "\" -i \"" + self.background_music + "\" " \
+            command = "./ffmpeg.exe -y -i \"" + SPEECH_PREVIEW_PATH + "\" -ss 15 -i \"" + self.background_music + "\" " \
                       + "-filter_complex amix=inputs=2:duration=shortest:weights=\"" + self.music_weight + "\" -f wav " + self.temp_folder_path + "\\" + self.PREVIEW_FILENAME
             completed_proc = subprocess.run(command)
 
