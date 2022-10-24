@@ -256,7 +256,7 @@ class BookKeeperWindow(tk.Tk):
 
     def on_mouse_wheel_scrolled_within_volume_scale(self, event, vol_scale):
         SCROLL_DELTA = event.delta / 120
-        STEP = abs(vol_scale.cget("to") - vol_scale.cget("from")) / 10
+        STEP = abs(vol_scale.cget("to") - vol_scale.cget("from")) / 5
 
         if SCROLL_DELTA > 0:
             if vol_scale.get() + STEP > vol_scale.cget("to"):
