@@ -1,5 +1,5 @@
 import os, sys, getopt, pyttsx3, shutil
-import subprocess
+import ntpath
 from pathlib import Path
 from typing import Callable
 
@@ -52,7 +52,7 @@ class BookKeeper:
             # print("=======> " + str(self.Progress()))
 
     def GenerateMP4 (self, name):
-        command="./ffmpeg.exe -stats -i " + self.music_path + name + ".mp3 -f null -"
+        command="./ffmpeg.exe -stats -i \"" + self.music_path + name + ".mp3\" -f null -"
 
         with open(self.temp_path + "stdout.txt", "wb") as out, open(self.temp_path + "stderr.txt", "wb") as err:
             subprocess.call(command,stdout=out,stderr=err)
@@ -68,7 +68,7 @@ class BookKeeper:
                     print(seconds)
 
         rate = '1' if seconds < 150 else '0.1'
-        command="./ffmpeg.exe -loop 1 -framerate 1 -i " + self.music_path + "cover.png -i " + self.music_path + name + ".mp3 -i " + self.background_music + ".mp3 -ss 0 -t " + str(seconds) + " -filter_complex amix=inputs=2:duration=longest:weights=\"" + self.music_weight + "\" -c:v libx264 -r " + rate + " -threads " + str(self.CPUs) + " -movflags +faststart " + self.video_path + name + ".mp4"
+        command="./ffmpeg.exe -loop 1 -framerate 1 -i " + self.music_path + "cover.png -i \"" + self.music_path + name + ".mp3\" -i " + self.background_music + ".mp3 -ss 0 -t " + str(seconds) + " -filter_complex amix=inputs=2:duration=longest:weights=\"" + self.music_weight + "\" -c:v libx264 -r " + rate + " -threads " + str(self.CPUs) + " -movflags +faststart \"" + self.video_path + name + ".mp4\""
         subprocess.call(command)
         file_object = open(self.output_path+"/list.txt", 'a', encoding='utf-8')
         file_object.write("file 'mp4/" + name + ".mp4'\n")
@@ -124,6 +124,7 @@ class BookKeeper:
 
         return result_path
 
+
     def Execute(self):
         self.music_path = self.output_path + "/mp3/"
         self.temp_path = self.output_path + "/tmp/"
@@ -135,8 +136,7 @@ class BookKeeper:
         if os.path.isdir(self.output_path):
             shutil.rmtree(self.output_path)
         os.makedirs(self.output_path, 0o777)
-        if not self.collect_names:
-            os.makedirs(self.music_path)
+        os.makedirs(self.music_path)
         if self.image_path:
             self.video_path = self.output_path + "/mp4/"
             os.makedirs(self.video_path)
@@ -145,19 +145,29 @@ class BookKeeper:
         with open(self.input_path, "r", encoding='utf-8') as input:
             input_file = preprocess(input.read())
 
-            if self.dictionary_path != '' :
+            if self.collect_names:
+                filename=ntpath.basename(self.input_path)[0:-4]
+                outpath = self.output_path + "/" + filename + "_dict"
+                names = CollectNames(input_file, outpath + ".txt", self.dictionary_path)
+
+                speaker.save_to_file(names, self.music_path + filename + '.mp3')
+                speaker.runAndWait()
+
+                if self.image_path != '' and self.background_music != '':
+                    shutil.copyfile(self.image_path, self.music_path + "cover.png")
+                    self.GenerateMP4(filename)
+
+                self.progress = 1
+                self.ReportProgress()
+                return
+
+            if self.dictionary_path != '':
                 with open(self.dictionary_path, "r", encoding='utf-8') as dict_file:
                     pronunciation = dict_file.readlines()
 
                     for line in pronunciation:
                         values = line.split('\t')
                         input_file = input_file.replace(values[0].lstrip(), values[1].rstrip())
-
-            if self.collect_names:
-                CollectNames(input_file, self.output_path)
-                self.progress = 1
-                self.ReportProgress()
-                return
 
             self.sumchars = len(input_file)
             sections=input_file.split(self.chapter_delimiter)
