@@ -57,7 +57,7 @@ class BookKeeperWindow(tk.Tk):
         self._is_processing = self._is_stop_processing_requested = self._is_exit_requested = False
 
         self.title(self._APP_NAME)
-        self.geometry("450x660")
+        self.geometry("450x640")
         self.resizable(False, False)
         self.iconbitmap("assets/icons/icons8-audio-book-50.ico")
         self.protocol("WM_DELETE_WINDOW", self.on_close)
