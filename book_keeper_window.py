@@ -110,18 +110,19 @@ class BookKeeperWindow(tk.Tk):
         config_frame = ttk.LabelFrame(self, text="Configuration")
         config_frame.pack(padx=10, pady=10, fill='both', expand=True)
 
-        self._is_find_names_checked = tk.StringVar(config_frame, "off")
-        self._find_names_check_button = ttk.Checkbutton(config_frame, text="Find names", command=self.on_find_names_check_changed,
-                                                        variable=self._is_find_names_checked, onvalue="on", offvalue="off")
-        self._find_names_check_button.pack(pady=5, fill='both', expand=True)
+        checkbox_frame = ttk.Frame(config_frame)
+        checkbox_frame.pack(padx=0, pady=5, fill='x', expand=True)
+
+        self._is_find_names_checked = tk.StringVar(checkbox_frame, "off")
+        self._find_names_check_button = ttk.Checkbutton(checkbox_frame, text="Find names", variable=self._is_find_names_checked, onvalue="on", offvalue="off")
+        self._find_names_check_button.pack(fill='x', expand=True, side=tk.LEFT)
 
         self._is_sleep_checked = tk.StringVar()
-        self._sleep_check_button = ttk.Checkbutton(config_frame, text="Put computer to sleep",
-                                                   variable=self._is_sleep_checked, onvalue="on", offvalue="off")
-        self._sleep_check_button.pack(pady=5, fill='both', expand=True)
+        self._sleep_check_button = ttk.Checkbutton(checkbox_frame, text="Put computer to sleep", variable=self._is_sleep_checked, onvalue="on", offvalue="off")
+        self._sleep_check_button.pack(fill='x', expand=True, side=tk.RIGHT)
 
         delimiter_sequence_frame = ttk.Frame(config_frame)
-        delimiter_sequence_frame.pack(padx=0, pady=0, fill='x', expand=True)
+        delimiter_sequence_frame.pack(fill='x', expand=True)
 
         delimiter_sequence_label = ttk.Label(delimiter_sequence_frame, text="Delimiter sequence:")
         delimiter_sequence_label.pack(fill='x', expand=True)
@@ -240,12 +241,14 @@ class BookKeeperWindow(tk.Tk):
         if file_type == "text":
             self.show_estimation()
 
-    def on_folder_browser_button_pressed(self, path: tk.StringVar, entry: ttk.Entry):
+    @staticmethod
+    def on_folder_browser_button_pressed(path: tk.StringVar, entry: ttk.Entry):
         filename = filedialog.askdirectory()
         path.set(filename)
         entry.xview_moveto(1)
 
-    def on_mouse_wheel_scrolled_within_volume_scale(self, event, vol_scale):
+    @staticmethod
+    def on_mouse_wheel_scrolled_within_volume_scale(event, vol_scale):
         SCROLL_DELTA = event.delta / 120
         STEP = abs(vol_scale.cget("to") - vol_scale.cget("from")) / 5
 
@@ -272,21 +275,6 @@ class BookKeeperWindow(tk.Tk):
             winsound.PlaySound(preview_path, winsound.SND_ASYNC)
         except Exception as e:
             tk.messagebox.showerror(self._APP_NAME, e)
-
-    def on_find_names_check_changed(self):
-        state = "disabled" if (self._is_find_names_checked.get() == "on") else "enabled"
-
-        self._music_volume_scale.config(state=state)
-        self._voice_volume_scale.config(state=state)
-        self._delimiter_sequence_entry.config(state=state)
-        self._cover_path_entry.config(state=state)
-        self._cover_path_browse_button.config(state=state)
-        self._background_music_path_entry.config(state=state)
-        self._preview_button.config(state=state)
-        self._background_music_path_browse_button.config(state=state)
-        self._sleep_check_button.config(state=state)
-
-        self.show_estimation()
 
     def on_close(self):
         if self._is_processing:
@@ -385,13 +373,10 @@ class BookKeeperWindow(tk.Tk):
         self._output_path_browse_button.config(state=state)
         self._process_button.config(state=state)
 
-        if not disable:
-            self.on_find_names_check_changed()
-
     def show_estimation(self, event=None):
         label_text = "Estimated video length and size: "
 
-        if self._is_find_names_checked.get() == "off" and self._book_path_entry.get() != "" and Path(self._book_path_entry.get()).is_file():
+        if self._book_path_entry.get() != "" and Path(self._book_path_entry.get()).is_file():
             book_keeper = BookKeeper()
             book_keeper.input_path = self._book_path_entry.get()
             book_keeper_estimation = book_keeper.Estimate()
