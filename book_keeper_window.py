@@ -9,6 +9,7 @@ from tkinter import messagebox
 import winsound
 from pathlib import Path
 from threading import Thread
+from typing import Callable
 
 
 class BookKeeperWindow(tk.Tk):
@@ -44,6 +45,7 @@ class BookKeeperWindow(tk.Tk):
     _is_processing: bool
     _is_stop_processing_requested: bool
     _is_exit_requested: bool
+    _kill_video_chapter_generating_process: Callable = None
 
     _APP_NAME = "Book keeper"
 
@@ -287,6 +289,9 @@ class BookKeeperWindow(tk.Tk):
 
     def on_stop_button_pressed(self):
         self._is_stop_processing_requested = True
+        if self._kill_video_chapter_generating_process:
+            self._kill_video_chapter_generating_process()
+
         self._progress_state_label.config(text="Stopping...")
         self._progress_percentage_label.config(text="")
         self._progress_bar.config(mode="indeterminate")
@@ -320,9 +325,11 @@ class BookKeeperWindow(tk.Tk):
         self.set_progress_bar(0)
         self._progress_state_label.config(text="Processing...")
         self._is_processing = True
+        self._kill_video_chapter_generating_process = bk.KillVideoGeneratingProcess
 
         try:
             bk.Execute()
+
             self._progress_state_label.config(text="")
             self._stop_button.config(state="disabled")
             if self._is_stop_processing_requested:
@@ -341,7 +348,9 @@ class BookKeeperWindow(tk.Tk):
         self._progress_percentage_label.config(text="")
         self._progress_state_label.config(text="")
         self.disable_widgets_for_processing(False)
+
         self._is_processing = self._is_stop_processing_requested = self._is_exit_requested = False
+        self._kill_video_chapter_generating_process = None
 
     def is_stop_processing_requested(self):
         return self._is_stop_processing_requested
