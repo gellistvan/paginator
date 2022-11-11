@@ -3,7 +3,9 @@ from book_keeper import BookKeeper
 from tktooltip import ToolTip
 
 import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
+from tkinter import ttk
+from tkinter import filedialog
+from tkinter import messagebox
 import winsound
 from pathlib import Path
 from threading import Thread
@@ -274,7 +276,7 @@ class BookKeeperWindow(tk.Tk):
             preview_path = book_keeper.GeneratePreview()
             winsound.PlaySound(preview_path, winsound.SND_ASYNC)
         except Exception as e:
-            tk.messagebox.showerror(self._APP_NAME, e)
+            tk.messagebox.showerror(self._APP_NAME, str(e))
 
     def on_close(self):
         if self._is_processing:
@@ -324,20 +326,16 @@ class BookKeeperWindow(tk.Tk):
             self._progress_state_label.config(text="")
             self._stop_button.config(state="disabled")
             if self._is_stop_processing_requested:
-                # todo(): destroy window when processing stopped
-                # if self._is_exit_requested:
-                #   self.destroy()
-                # else:
                 self._progress_bar.stop()
                 self._progress_bar.config(mode="determinate")
                 tk.messagebox.showinfo(self._APP_NAME, "Process aborted.")
             else:
                 tk.messagebox.showinfo(self._APP_NAME, ("Dictionary" if (self._is_find_names_checked.get() == "on") else "Video") + " generated successfully.")
-        except:
+        except Exception as e:
             self._progress_state_label.config(text="")
             self._progress_percentage_label.config(text="")
             self._stop_button.config(state="disabled")
-            tk.messagebox.showerror(self._APP_NAME, "An error occurred.")
+            tk.messagebox.showerror(self._APP_NAME, str(e))
 
         self.set_progress_bar(0)
         self._progress_percentage_label.config(text="")
