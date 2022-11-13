@@ -8,6 +8,14 @@ from media_utils import *
 
 from preprocess import *
 
+from threading import Thread
+
+def ExtractMusic(folder, filename, outfolder, temp_path):
+    command="./ffmpeg.exe -i \""+ folder + filename + ".mp4\" -map 0:a -c copy " + outfolder + filename + ".m4a"
+
+    with open(temp_path + "thread_stdout.txt", "wb") as out, open(temp_path + "thread_stdout.txt", "wb") as err:
+        subprocess.call(command,stdout=out,stderr=err)
+
 class BookKeeper:
     temp_path = ''
     music_path=''
@@ -52,7 +60,7 @@ class BookKeeper:
             # print("=======> " + str(self.Progress()))
 
     def GenerateMP4 (self, name):
-        command="./ffmpeg.exe -stats -i \"" + self.music_path + name + ".mp3\" -f null -"
+        command="./ffmpeg.exe -stats -i \"" + self.temp_path + name + ".mp3\" -f null -"
 
         with open(self.temp_path + "stdout.txt", "wb") as out, open(self.temp_path + "stderr.txt", "wb") as err:
             subprocess.call(command,stdout=out,stderr=err)
@@ -68,11 +76,10 @@ class BookKeeper:
                     print(seconds)
 
         rate = '1' if seconds < 150 else '0.1'
-        command="./ffmpeg.exe -loop 1 -framerate 1 -i " + self.music_path + "cover.png -i \"" + self.music_path + name + ".mp3\" -i " + self.background_music + ".mp3 -ss 0 -t " + str(seconds) + " -filter_complex amix=inputs=2:duration=longest:weights=\"" + self.music_weight + "\" -c:v libx264 -r " + rate + " -threads " + str(self.CPUs) + " -movflags +faststart \"" + self.video_path + name + ".mp4\""
+        command="./ffmpeg.exe -loop 1 -framerate 1 -i " + self.temp_path + "cover.png -i \"" + self.temp_path + name + ".mp3\" -i " + self.background_music + ".mp3 -ss 0 -t " + str(seconds) + " -filter_complex amix=inputs=2:duration=longest:weights=\"" + self.music_weight + "\" -c:v libx264 -r " + rate + " -threads " + str(self.CPUs) + " -movflags +faststart \"" + self.video_path + name + ".mp4\""
         subprocess.call(command)
         file_object = open(self.output_path+"/list.txt", 'a', encoding='utf-8')
         file_object.write("file 'mp4/" + name + ".mp4'\n")
-        print(name + 'video')
 
     def TriggerSleep(self):
         os.system("rundll32.exe powrprof.dll,SetSuspendState 0,1,0")
@@ -150,12 +157,13 @@ class BookKeeper:
                 outpath = self.output_path + "/" + filename + "_dict"
                 names = CollectNames(input_file, outpath + ".txt", self.dictionary_path)
 
-                speaker.save_to_file(names, self.music_path + filename + '.mp3')
+                speaker.save_to_file(names, self.temp_path + filename + '.mp3')
                 speaker.runAndWait()
 
                 if self.image_path != '' and self.background_music != '':
-                    shutil.copyfile(self.image_path, self.music_path + "cover.png")
+                    shutil.copyfile(self.image_path, self.temp_path + "cover.png")
                     self.GenerateMP4(filename)
+                    ExtractMusic(self.video_path, filename, self.music_path, self.temp_path)
 
                 self.progress = 1
                 self.ReportProgress()
@@ -179,7 +187,7 @@ class BookKeeper:
                 self.actualstep = len(section)/self.sumchars
                 self.ReportProgress()
                 name = format(int(index), "02d")
-                speaker.save_to_file(section, self.music_path + name + '.mp3')
+                speaker.save_to_file(section, self.temp_path + name + '.mp3')
                 speaker.runAndWait()
                 self.ReportProgress()
                 self.subprogress = 0.35
@@ -188,9 +196,13 @@ class BookKeeper:
                     return
 
                 if self.image_path:
-                    shutil.copyfile(self.image_path, self.music_path + "cover.png")
+                    shutil.copyfile(self.image_path, self.temp_path + "cover.png")
                     self.GenerateMP4(name)
                     self.sumlen = self.CheckPartLength(name, self.sumlen)
+
+                    thread = Thread(target=ExtractMusic(self.video_path, name, self.music_path, self.temp_path))
+                    thread.start()
+
                 index += 1
                 self.ReportProgress()
 
