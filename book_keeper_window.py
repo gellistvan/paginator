@@ -3,10 +3,13 @@ from book_keeper import BookKeeper
 from tktooltip import ToolTip
 
 import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
+from tkinter import ttk
+from tkinter import filedialog
+from tkinter import messagebox
 import winsound
 from pathlib import Path
 from threading import Thread
+from typing import Callable
 
 
 class BookKeeperWindow(tk.Tk):
@@ -42,6 +45,7 @@ class BookKeeperWindow(tk.Tk):
     _is_processing: bool
     _is_stop_processing_requested: bool
     _is_exit_requested: bool
+    _kill_video_chapter_generating_process: Callable = None
 
     _APP_NAME = "Book keeper"
 
@@ -57,7 +61,7 @@ class BookKeeperWindow(tk.Tk):
         self._is_processing = self._is_stop_processing_requested = self._is_exit_requested = False
 
         self.title(self._APP_NAME)
-        self.geometry("450x660")
+        self.geometry("450x640")
         self.resizable(False, False)
         self.iconbitmap("assets/icons/icons8-audio-book-50.ico")
         self.protocol("WM_DELETE_WINDOW", self.on_close)
@@ -274,7 +278,7 @@ class BookKeeperWindow(tk.Tk):
             preview_path = book_keeper.GeneratePreview()
             winsound.PlaySound(preview_path, winsound.SND_ASYNC)
         except Exception as e:
-            tk.messagebox.showerror(self._APP_NAME, e)
+            tk.messagebox.showerror(self._APP_NAME, str(e))
 
     def on_close(self):
         if self._is_processing:
@@ -285,6 +289,9 @@ class BookKeeperWindow(tk.Tk):
 
     def on_stop_button_pressed(self):
         self._is_stop_processing_requested = True
+        if self._kill_video_chapter_generating_process:
+            self._kill_video_chapter_generating_process()
+
         self._progress_state_label.config(text="Stopping...")
         self._progress_percentage_label.config(text="")
         self._progress_bar.config(mode="indeterminate")
@@ -318,32 +325,32 @@ class BookKeeperWindow(tk.Tk):
         self.set_progress_bar(0, 0)
         self._progress_state_label.config(text="Processing...")
         self._is_processing = True
+        self._kill_video_chapter_generating_process = bk.KillVideoGeneratingProcess
 
         try:
             bk.Execute()
+
             self._progress_state_label.config(text="")
             self._stop_button.config(state="disabled")
             if self._is_stop_processing_requested:
-                # todo(): destroy window when processing stopped
-                # if self._is_exit_requested:
-                #   self.destroy()
-                # else:
                 self._progress_bar.stop()
                 self._progress_bar.config(mode="determinate")
                 tk.messagebox.showinfo(self._APP_NAME, "Process aborted.")
             else:
                 tk.messagebox.showinfo(self._APP_NAME, ("Dictionary" if (self._is_find_names_checked.get() == "on") else "Video") + " generated successfully.")
-        except:
+        except Exception as e:
             self._progress_state_label.config(text="")
             self._progress_percentage_label.config(text="")
             self._stop_button.config(state="disabled")
-            tk.messagebox.showerror(self._APP_NAME, "An error occurred.")
+            tk.messagebox.showerror(self._APP_NAME, str(e))
 
         self.set_progress_bar(0, 0)
         self._progress_percentage_label.config(text="")
         self._progress_state_label.config(text="")
         self.disable_widgets_for_processing(False)
+
         self._is_processing = self._is_stop_processing_requested = self._is_exit_requested = False
+        self._kill_video_chapter_generating_process = None
 
     def is_stop_processing_requested(self):
         return self._is_stop_processing_requested

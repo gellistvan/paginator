@@ -46,6 +46,7 @@ class BookKeeper:
     CPUs = os.cpu_count()
     trigger_sleep = False
     starttime = 0
+    video_chapter_generating_process: subprocess.Popen = None
 
     temp_folder_path: str
     PREVIEW_FILENAME = "preview.wav"
@@ -86,6 +87,12 @@ class BookKeeper:
         rate = '1' if seconds < 150 else '0.5'
         command="./ffmpeg.exe -loop 1 -framerate 1 -i " + self.temp_path + "cover.png -i \"" + self.temp_path + name + ".mp3\" -i " + self.background_music + ".mp3 -ss 0 -t " + str(seconds) + " -filter_complex amix=inputs=2:duration=longest:weights=\"" + self.music_weight + "\" -c:v libx264 -r " + rate + " -threads " + str(self.CPUs) + " -movflags +faststart \"" + self.video_path + name + ".mp4\""
         subprocess.call(command)
+        rate = '1' if seconds < 150 else '0.1'
+        command="./ffmpeg.exe -loop 1 -framerate 1 -i " + self.music_path + "cover.png -i \"" + self.music_path + name + ".mp3\" -i " + self.background_music + ".mp3 -ss 0 -t " + str(seconds) + " -filter_complex amix=inputs=2:duration=longest:weights=\"" + self.music_weight + "\" -c:v libx264 -r " + rate + " -threads " + str(self.CPUs) + " -movflags +faststart \"" + self.video_path + name + ".mp4\""
+        self.video_chapter_generating_process = subprocess.Popen(command)
+        self.video_chapter_generating_process.communicate()
+        self.video_chapter_generating_process = None
+
         file_object = open(self.output_path+"/list.txt", 'a', encoding='utf-8')
         file_object.write("file 'mp4/" + name + ".mp4'\n")
 
@@ -139,6 +146,10 @@ class BookKeeper:
 
         return result_path
 
+    def KillVideoGeneratingProcess(self):
+        if self.video_chapter_generating_process and self.video_chapter_generating_process.poll() is None:
+            self.video_chapter_generating_process.kill()
+            self.video_chapter_generating_process = None
 
     def Execute(self):
         self.starttime = utc_timestamp()
