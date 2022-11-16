@@ -1,5 +1,9 @@
 import re
 
+vovels = ["a", "á", "e", "é", "i", "í", "o", "ó", "ö", "ő", "u", "ú", "ü", "ű"]
+v_declinations = ["al", "el", "á", "é", "ár", "ér"]
+declinations = ["t", "nak", "nek", "ért", "ban", "ben", "ba", "be", "on", "en", "ön", "nál", "nél", "ra", "re", "hoz", "hez", "höz", "ból", "ből", "ról", "ről", "tól", "től", "ig", "ként", "ul", "ül", "i"]
+
 def BuildDictionary(dictionary_path):
     output = []
     with open(dictionary_path, "r", encoding='utf-8') as dict_file:
@@ -16,7 +20,7 @@ def BuildDictionary(dictionary_path):
                     found = True
                     for i in range(len(terms)):
                         output.append((terms[i], items[i]))
-                        print(terms[i] + " ---> " + items[i])
+                        # print(terms[i] + " ---> " + items[i])
 
             if not found:
                 output.append((values[0].lstrip(), values[1].rstrip()))
@@ -109,4 +113,4 @@ def CollectNames(input_file, output_path, dictionary_path):
     WriteEntries(transcribed, output_path, "a")
     WriteEntries(known_abs, output_path, "a")
 
-    return ", ".join(keys) + ", " + ", ".join(abs)
+    return "\n ".join(keys) + "\n " + "\n ".join(abs)

@@ -322,7 +322,7 @@ class BookKeeperWindow(tk.Tk):
     def process(self, bk: BookKeeper):
         self.disable_widgets_for_processing(True)
         self._stop_button.config(state="enabled")
-        self.set_progress_bar(0)
+        self.set_progress_bar(0, 0)
         self._progress_state_label.config(text="Processing...")
         self._is_processing = True
         self._kill_video_chapter_generating_process = bk.KillVideoGeneratingProcess
@@ -344,7 +344,7 @@ class BookKeeperWindow(tk.Tk):
             self._stop_button.config(state="disabled")
             tk.messagebox.showerror(self._APP_NAME, str(e))
 
-        self.set_progress_bar(0)
+        self.set_progress_bar(0, 0)
         self._progress_percentage_label.config(text="")
         self._progress_state_label.config(text="")
         self.disable_widgets_for_processing(False)
@@ -355,10 +355,17 @@ class BookKeeperWindow(tk.Tk):
     def is_stop_processing_requested(self):
         return self._is_stop_processing_requested
 
-    def set_progress_bar(self, progress: float):
+    def set_progress_bar(self, progress: float, time_remaining: float):
+        if progress > 5:
+            hours = int(time_remaining / 3600)
+            minutes = int ((time_remaining - hours * 3600)/60)
+            seconds = int(time_remaining - hours * 3600 - minutes * 60)
+            time_string = "{hours:02d}:{minutes:02d}:{seconds:02d}".format(hours = hours, minutes = minutes, seconds = seconds)
+            self._progress_state_label.config(text=time_string)
+
         if not self._is_stop_processing_requested:
-            self._progress_bar["value"] = progress * 100
-            self._progress_percentage_label.config(text=str(int(progress * 100)) + "%")
+            self._progress_bar["value"] = progress
+            self._progress_percentage_label.config(text=str(int(progress)) + "%")
 
     def disable_widgets_for_processing(self, disable: bool):
         state = "disabled" if disable else "enabled"

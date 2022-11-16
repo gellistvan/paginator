@@ -5,8 +5,22 @@ from typing import Callable
 
 from collect_names import *
 from media_utils import *
-
+from datetime import timezone
+import datetime
 from preprocess import *
+
+from threading import Thread
+
+def ExtractMusic(folder, filename, outfolder, temp_path):
+    command="./ffmpeg.exe -i \""+ folder + filename + ".mp4\" -map 0:a -c copy " + outfolder + filename + ".m4a"
+
+    with open(temp_path + "thread_stdout.txt", "wb") as out, open(temp_path + "thread_stdout.txt", "wb") as err:
+        subprocess.call(command,stdout=out,stderr=err)
+
+def utc_timestamp():
+    dt = datetime.datetime.now(timezone.utc)
+    utc_time = dt.replace(tzinfo=timezone.utc)
+    return utc_time.timestamp()
 
 class BookKeeper:
     temp_path = ''
@@ -31,6 +45,7 @@ class BookKeeper:
     is_stop_progressing_requested_callback: Callable = None
     CPUs = os.cpu_count()
     trigger_sleep = False
+    starttime = 0
     video_chapter_generating_process: subprocess.Popen = None
 
     temp_folder_path: str
@@ -47,13 +62,16 @@ class BookKeeper:
                 self.temp_folder_path = "."
 
     def ReportProgress(self):
+        percent = int(100*(self.progress + self.subprogress * self.actualstep))
+        time_remaining = 0 if percent == 0 else (100-percent)*((utc_timestamp() - self.starttime) / percent)
+
         if self.set_progress_bar_callback is not None:
-            self.set_progress_bar_callback(int(100*(self.progress + self.subprogress * self.actualstep))/100.0)
+            self.set_progress_bar_callback(percent, time_remaining)
         # else:
             # print("=======> " + str(self.Progress()))
 
     def GenerateMP4 (self, name):
-        command="./ffmpeg.exe -stats -i \"" + self.music_path + name + ".mp3\" -f null -"
+        command="./ffmpeg.exe -stats -i \"" + self.temp_path + name + ".mp3\" -f null -"
 
         with open(self.temp_path + "stdout.txt", "wb") as out, open(self.temp_path + "stderr.txt", "wb") as err:
             subprocess.call(command,stdout=out,stderr=err)
@@ -64,10 +82,11 @@ class BookKeeper:
             for line in Lines:
                 if ("Duration:" in line):
                     times=line.split()[1].split('.')[0].split(":")
-                    seconds=int(times[0])*3600 + int(times[1])*60+int(times[2])
-                    print(line)
-                    print(seconds)
+                    seconds=int(times[0])*3600 + int(times[1])*60+int(times[2]) + 10
 
+        rate = '1' if seconds < 150 else '0.5'
+        command="./ffmpeg.exe -loop 1 -framerate 1 -i " + self.temp_path + "cover.png -i \"" + self.temp_path + name + ".mp3\" -i " + self.background_music + ".mp3 -ss 0 -t " + str(seconds) + " -filter_complex amix=inputs=2:duration=longest:weights=\"" + self.music_weight + "\" -c:v libx264 -r " + rate + " -threads " + str(self.CPUs) + " -movflags +faststart \"" + self.video_path + name + ".mp4\""
+        subprocess.call(command)
         rate = '1' if seconds < 150 else '0.1'
         command="./ffmpeg.exe -loop 1 -framerate 1 -i " + self.music_path + "cover.png -i \"" + self.music_path + name + ".mp3\" -i " + self.background_music + ".mp3 -ss 0 -t " + str(seconds) + " -filter_complex amix=inputs=2:duration=longest:weights=\"" + self.music_weight + "\" -c:v libx264 -r " + rate + " -threads " + str(self.CPUs) + " -movflags +faststart \"" + self.video_path + name + ".mp4\""
         self.video_chapter_generating_process = subprocess.Popen(command)
@@ -76,7 +95,6 @@ class BookKeeper:
 
         file_object = open(self.output_path+"/list.txt", 'a', encoding='utf-8')
         file_object.write("file 'mp4/" + name + ".mp4'\n")
-        print(name + 'video')
 
     def TriggerSleep(self):
         os.system("rundll32.exe powrprof.dll,SetSuspendState 0,1,0")
@@ -96,7 +114,7 @@ class BookKeeper:
             return "", ""
         kilobytes = (os.stat(self.input_path).st_size / 1024.0)
         sum_seconds = 62 * kilobytes
-        out_size = (1.35 * kilobytes) / (1024 * 1024)
+        out_size = (1.35 * kilobytes)
         hours = int(sum_seconds / 3600)
         sum_seconds -= hours * 3600
         minutes = int (sum_seconds / 60)
@@ -134,6 +152,7 @@ class BookKeeper:
             self.video_chapter_generating_process = None
 
     def Execute(self):
+        self.starttime = utc_timestamp()
         self.music_path = self.output_path + "/mp3/"
         self.temp_path = self.output_path + "/tmp/"
 
@@ -158,12 +177,13 @@ class BookKeeper:
                 outpath = self.output_path + "/" + filename + "_dict"
                 names = CollectNames(input_file, outpath + ".txt", self.dictionary_path)
 
-                speaker.save_to_file(names, self.music_path + filename + '.mp3')
+                speaker.save_to_file(names, self.temp_path + filename + '.mp3')
                 speaker.runAndWait()
 
                 if self.image_path != '' and self.background_music != '':
-                    shutil.copyfile(self.image_path, self.music_path + "cover.png")
+                    shutil.copyfile(self.image_path, self.temp_path + "cover.png")
                     self.GenerateMP4(filename)
+                    ExtractMusic(self.video_path, filename, self.music_path, self.temp_path)
 
                 self.progress = 1
                 self.ReportProgress()
@@ -187,7 +207,7 @@ class BookKeeper:
                 self.actualstep = len(section)/self.sumchars
                 self.ReportProgress()
                 name = format(int(index), "02d")
-                speaker.save_to_file(section, self.music_path + name + '.mp3')
+                speaker.save_to_file(section, self.temp_path + name + '.mp3')
                 speaker.runAndWait()
                 self.ReportProgress()
                 self.subprogress = 0.35
@@ -196,9 +216,13 @@ class BookKeeper:
                     return
 
                 if self.image_path:
-                    shutil.copyfile(self.image_path, self.music_path + "cover.png")
+                    shutil.copyfile(self.image_path, self.temp_path + "cover.png")
                     self.GenerateMP4(name)
                     self.sumlen = self.CheckPartLength(name, self.sumlen)
+
+                    thread = Thread(target=ExtractMusic(self.video_path, name, self.music_path, self.temp_path))
+                    thread.start()
+
                 index += 1
                 self.ReportProgress()
 
