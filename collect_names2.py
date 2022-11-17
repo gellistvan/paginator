@@ -4,7 +4,76 @@ vovels = ["a", "á", "e", "é", "i", "í", "o", "ó", "ö", "ő", "u", "ú", "ü
 v_declinations = ["val", "vel", "vá", "vé"]
 declinations = ["nak", "nek", "ért", "ban", "ben", "ba", "be", "on", "en", "ön", "nál", "nél", "ra", "re", "hoz", "hez", "höz", "ból", "ből", "ról", "ről", "tól", "től", "ig", "ként", "ul", "ül"]
 
+def PostprocessDictionary(dictionary):
+    output = []
 
+    for entry in dictionary:
+        found = False
+        for d in declinations:
+            if entry[0].endswith(d) and entry[0].endswith(d):
+                trunk = entry[0][0:-1*len(d)]
+                trunk_pron = entry[1][0:-1*len(d)]
+                output.append((trunk, trunk_pron))
+                if trunk[-1] == 'á':
+                    trunk = trunk[0:-1] +'a'
+                    trunk_pron = trunk_pron[0:-1] +'a'
+                    output.append((trunk, trunk_pron))
+                elif trunk[-1] == 'é':
+                    trunk = trunk[0:-1] +'e'
+                    trunk_pron = trunk_pron[0:-1] +'e'
+                    output.append((trunk, trunk_pron))
+
+                if len(d) < 3:
+                    output.append(entry)
+                found = True
+                break
+
+        if found:
+            continue
+
+        for v in v_declinations:
+            if entry[0].endswith(v) and entry[1].endswith(v):
+                trunk = entry[0][0:-1*len(v)]
+                trunk_pron = entry[1][0:-1*len(v)]
+                output.append((trunk, trunk_pron))
+                found = True
+
+                if trunk[-1] not in "áéiíoóöőuúüűv":
+                    output.append(entry)  # fake rag
+                    break
+
+                output.append((trunk, trunk_pron))
+                if trunk[-1] == 'á':
+                    trunk = trunk[0:-1] +'a'
+                    trunk_pron = trunk_pron[0:-1] +'a'
+                    output.append((trunk, trunk_pron))
+                elif trunk[-1] == 'é':
+                    trunk = trunk[0:-1] +'e'
+                    trunk_pron = trunk_pron[0:-1] +'e'
+                    output.append((trunk, trunk_pron))
+
+        if found:
+            continue
+
+        for v in v_declinations:
+            if entry[0].endswith(v[1:]) and entry[1].endswith(v[1:]):
+                trunk = entry[0][0:-1*len(v)+1]
+                trunk_pron = entry[1][0:-1*len(v)+1]
+                found = True
+                if trunk[-1] in "aáeéiíoóöőuúüűv":
+                    output.append(entry) #fake match
+                    break
+
+                if trunk[-1] == trunk[-2]:
+                    trunk = trunk[0:-1]
+                    trunk_pron = trunk_pron[0:-1]
+                    output.append((trunk, trunk_pron))
+        if found:
+            continue
+
+        output.append(entry)
+
+    return output
 
 def BuildDictionary(dictionary_path):
     output = []
@@ -27,7 +96,7 @@ def BuildDictionary(dictionary_path):
             #if not found:
             output.append((values[0].lstrip(), values[1].rstrip()))
 
-    return output
+    return PostprocessDictionary(output)
 
 def FindNames(input_file):
     matches = re.findall(r"[^\.\?\!\-”\]–] (([A-ZÖÜÓŐÚÉÁŰÍ][a-zöüóőúéáűí]{3,}[ \.\!\?\,\-])+)", input_file)
@@ -104,8 +173,6 @@ def FindLowercase(keys, inputfile):
 
 def FilterDeclinations(keys):
     output = []
-    print()
-    print()
     for key in keys:
         found = False
         for d in declinations:
@@ -167,8 +234,11 @@ def FilterDeclinations(keys):
     return output
 
 def CollectNames(input_file, output_path, dictionary_path):
+    print()
+    print()
     dictionary = BuildDictionary(dictionary_path)
-
+    print(dictionary)
+    print("----------------")
     keys = FindNames(input_file)
     keys = SplitNames(SplitNames(keys, " "), "-")
     keys = RemovePrefixes(keys)
@@ -181,6 +251,7 @@ def CollectNames(input_file, output_path, dictionary_path):
     shortenings = FindShortenings(input_file)
 
     print(keys)
+    print(transcribed)
 
     print("Collect")
 
