@@ -41,6 +41,7 @@ class BookKeeperWindow(tk.Tk):
     _progress_state_label: ttk.Label
     _process_button: ttk.Button
     _stop_button: ttk.Button
+    _about_button: ttk.Button
 
     _is_processing: bool
     _is_stop_processing_requested: bool
@@ -237,6 +238,10 @@ class BookKeeperWindow(tk.Tk):
         self._process_button = ttk.Button(process_control_frame, text="Process", command=self.on_process_button_pressed)
         self._process_button.pack(fill=tk.Y, padx=4, side=tk.RIGHT)
 
+        def show_about_window(): tk.messagebox.showinfo(self._APP_NAME, "Book keeper v.1.0")
+        self._about_button = ttk.Button(process_control_frame, text="About", command=show_about_window)
+        self._about_button.pack(fill=tk.Y, padx=4, side=tk.LEFT)
+
     def on_file_browser_button_pressed(self, file_type: str, path: tk.StringVar, entry: ttk.Entry):
         filename = filedialog.askopenfilename(filetypes=self._filedialog_types[file_type])
         path.set(filename)
@@ -386,6 +391,7 @@ class BookKeeperWindow(tk.Tk):
         self._output_path_entry.config(state=state)
         self._output_path_browse_button.config(state=state)
         self._process_button.config(state=state)
+        self._about_button.config(state=state)
 
     def show_estimation(self, event=None):
         label_text = "Estimated video length and size: "
