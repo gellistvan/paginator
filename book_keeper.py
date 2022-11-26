@@ -3,7 +3,7 @@ import ntpath
 from pathlib import Path
 from typing import Callable
 
-from collect_names import *
+from collect_names2 import *
 from media_utils import *
 from datetime import timezone
 import datetime
@@ -175,7 +175,7 @@ class BookKeeper:
             if self.collect_names:
                 filename=ntpath.basename(self.input_path)[0:-4]
                 outpath = self.output_path + "/" + filename + "_dict"
-                names = CollectNames(input_file, outpath + ".txt", self.dictionary_path)
+                names = CollectNames2(input_file, outpath + ".txt", self.dictionary_path)
 
                 speaker.save_to_file(names, self.temp_path + filename + '.mp3')
                 speaker.runAndWait()
@@ -192,10 +192,13 @@ class BookKeeper:
             if self.dictionary_path != '':
                 with open(self.dictionary_path, "r", encoding='utf-8') as dict_file:
                     pronunciation = dict_file.readlines()
-
+                    dictionary = []
                     for line in pronunciation:
                         values = line.split('\t')
-                        input_file = input_file.replace(values[0].lstrip(), values[1].rstrip())
+                        dictionary.append((values[0].lstrip(), values[1].rstrip()))
+                    dictionary = sorted(sorted(dictionary), reverse=True, key=lambda var: len(var[0]))
+                    for line in dictionary:
+                        input_file = input_file.replace(line[0], line[1])
 
             self.sumchars = len(input_file)
             sections=input_file.split(self.chapter_delimiter)

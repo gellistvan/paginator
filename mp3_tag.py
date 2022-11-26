@@ -2,7 +2,7 @@ import os
 import music_tag
 
 
-input_path='./covers/DONE/Pease/'
+input_path='./Doberdo/mp3/'
 album_title=''
 author=''
 cover=input_path + 'cover.png'

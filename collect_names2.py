@@ -3,6 +3,17 @@ import re
 vovels = ["a", "á", "e", "é", "i", "í", "o", "ó", "ö", "ő", "u", "ú", "ü", "ű"]
 v_declinations = ["val", "vel", "vá", "vé"]
 declinations = ["nak", "nek", "ért", "ban", "ben", "ba", "be", "on", "en", "ön", "nál", "nél", "ra", "re", "hoz", "hez", "höz", "ból", "ből", "ról", "ről", "tól", "től", "ig", "ként", "ul", "ül"]
+plurals = ["ak", "ok", "ek", "ök"]
+
+def is_plural(key):
+    if len(key) < 6:
+        return False
+
+    for p in plurals:
+        if key.endswith(p) and key[-3] not in vovels:
+            return True
+    return False
+
 
 def PostprocessDictionary(dictionary):
     output = []
@@ -91,7 +102,6 @@ def BuildDictionary(dictionary_path):
                     found = True
                     for i in range(len(terms)):
                         output.append((terms[i], items[i]))
-                        # print(terms[i] + " ---> " + items[i])
 
             #if not found:
             output.append((values[0].lstrip(), values[1].rstrip()))
@@ -126,19 +136,21 @@ def TranscribeKnownNames(dictionary, keys):
     return unknown, transcribed
 
 def RemovePrefixes(keys):
-    last = keys[0]
-    for key in keys[:]:
-        if last != key and ((last not in key) or abs(len(key) - len(last)) > 3):
-            if (last + ' ') in key :
-                keys.remove(key)
-                keys.append(key[len(last) + 1 :])
-            else:
-                last=key
-        else:
-            keys.remove(key)
+    if len(keys) < 2:
+        return keys
 
-    keys.sort()
-    return keys
+    output = [keys[0]]
+    start_index = 0
+    i = 1
+    while i < len(keys):
+        if keys[i] != keys[start_index] and ((keys[start_index] not in keys[i]) or abs(len(keys[i]) - len(keys[start_index])) > 3):
+            start_index = i
+
+            output.append(keys[i])
+        i = i + 1
+
+    output.sort()
+    return output
 
 def SplitNames(keys, delimiter):
     output=[]
@@ -171,7 +183,106 @@ def FindLowercase(keys, inputfile):
             output.append(item)
     return list(dict.fromkeys(output))
 
+def find_steams(key):
+    output = []
+    for d in declinations:
+        if key.endswith(d):
+            trunk = key[0:-1*len(d)]
+            output.append(trunk)
+            if trunk[-1] == 'á':
+                trunk = trunk[0:-1] +'a'
+                output.append(trunk)
+            elif trunk[-1] == 'é':
+                trunk = trunk[0:-1] +'e'
+                output.append(trunk)
+
+            # if len(d) < 3:
+            #     output.append(key)
+            return output
+
+    for v in v_declinations:
+        if key.endswith(v):
+            trunk = key[0:-1*len(v)]
+
+            if trunk[-1] not in "áéiíoóöőuúüűv":
+                break
+
+            output.append(trunk)
+            if trunk[-1] == 'á':
+                trunk = trunk[0:-1] +'a'
+                output.append(trunk)
+            elif trunk[-1] == 'é':
+                trunk = trunk[0:-1] +'e'
+                output.append(trunk)
+
+            return output
+
+    for v in v_declinations:
+        if key.endswith(v[1:]):
+            trunk = key[0:-1*len(v)+1]
+            if trunk[-1] in "aáeéiíoóöőuúüűv":
+                break
+
+            if trunk[-1] == trunk[-2]:
+                trunk = trunk[0:-1]
+                output.append(trunk)
+
+    return output
+
 def FilterDeclinations(keys):
+    all_steams = []
+    for key in keys:
+        steams = find_steams(key)
+        if len(steams) == 1 and is_plural(steams[0]) :
+            steams = [steams[0][0:-2]]
+            # print("\t" + str(steams))
+        if len(steams) and  4 < len(sorted(steams, reverse=True, key=len)[0]):
+            all_steams.append(steams)
+        else:
+            all_steams.append([])
+        print(key + " " + str(all_steams[-1]))
+
+    output = [keys[0]]
+
+    for index in range(1, len(keys)):
+        if len(all_steams[index]) and 4 > len(sorted(all_steams[index], reverse=True, key=len)[0]):
+            output.append(keys[index])
+            output.extend(all_steams[index])
+            continue
+
+        has_other = False
+
+        for steam in all_steams[index]:
+            if len(steam) > 3:
+                for i in range(index + 1, len(keys)):
+                    if keys[index][0:3] != keys[i][0:3]:
+                        break
+
+                    if steam in all_steams[i] or keys[i].startswith(steam):
+                        # if keys[i].startswith(steam):
+                        #     print(str(all_steams[index]) + " " + keys[i])
+                        has_other = True
+                        break
+
+                if not has_other:
+                    for i in range(index -1, 0, -1):
+                        if keys[index][0:3] != keys[i][0:3]:
+                            break
+                        if steam in all_steams[i] or keys[i].startswith(steam):
+                            has_other = True
+                            break
+
+                if has_other:
+                    break
+
+        if has_other:
+            output.extend(all_steams[index])
+        else:
+            output.append(keys[index])
+
+    return list(dict.fromkeys(output))
+
+def FilterDeclinations2(keys):
     output = []
     for key in keys:
         found = False
@@ -218,12 +329,12 @@ def FilterDeclinations(keys):
         for v in v_declinations:
             if key.endswith(v[1:]):
                 trunk = key[0:-1*len(v)+1]
-                found = True
                 if trunk[-1] in "aáeéiíoóöőuúüűv":
                     output.append(key) #fake match
                     break
 
                 if trunk[-1] == trunk[-2]:
+                    found = True
                     trunk = trunk[0:-1]
                     output.append(trunk)
         if found:
@@ -233,7 +344,21 @@ def FilterDeclinations(keys):
     output = list(dict.fromkeys(output))
     return output
 
-def CollectNames(input_file, output_path, dictionary_path):
+
+def WriteEntries(entries, output_path, mode):
+    if len(entries) == 0:
+        return
+
+    last = entries[0]
+    with open(output_path, mode, encoding='utf-8') as output:
+        for key in entries[:]:
+            if last != key and ((last not in key) or abs(len(key) - len(last)) > 3):
+                last=key
+                output.write(key + "\n")
+            else:
+                entries.remove(key)
+
+def CollectNames2(input_file, output_path, dictionary_path):
     print()
     print()
     dictionary = BuildDictionary(dictionary_path)
@@ -244,18 +369,30 @@ def CollectNames(input_file, output_path, dictionary_path):
     keys = RemovePrefixes(keys)
     keys = FilterDeclinations(keys)
 
-    keys = FindLowercase(keys, input_file)
+    #keys = FindLowercase(keys, input_file)
 
     keys, transcribed = TranscribeKnownNames(dictionary, keys)
     abs, known_abs = TranscribeKnownNames(dictionary, FindAbreviations(input_file))
     shortenings = FindShortenings(input_file)
 
-    print(keys)
-    print(transcribed)
+    WriteEntries(keys, output_path, "w")
+    WriteEntries(abs, output_path, "a")
+    WriteEntries(transcribed, output_path, "a")
+    WriteEntries(known_abs, output_path, "a")
 
-    print("Collect")
+    return "\n ".join(keys) + "\n " + "\n ".join(abs)
+#
 
-with open("./dictimprove/probafile.txt", "r", encoding='utf-8') as input:
-    content = input.read()
-    CollectNames(content, "output.txt", "./dictimprove/probafile_dict.txt")
+import os
+for filename in os.listdir("./new_books/06. Oknyomozás, életrajz/"):
+    f = os.path.join("./new_books/06. Oknyomozás, életrajz/", filename)
+    if not filename.endswith("txt"):
+        continue
+    with open(f, "r", encoding='utf-8') as input:
+        content = input.read()
+        keys = CollectNames2(content, "./new_books/06. Oknyomozás, életrajz/dict/dict_" + filename, "./big_dict.txt")
 
+# with open("./09 doberdo_isonzo_tirol.txt", "r", encoding='utf-8') as input:
+#     content = input.read()
+#     keys = CollectNames2(content, "dictimprove/output.txt", "./big_dict.txt")
+#
