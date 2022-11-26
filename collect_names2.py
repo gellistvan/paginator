@@ -381,18 +381,3 @@ def CollectNames2(input_file, output_path, dictionary_path):
     WriteEntries(known_abs, output_path, "a")
 
     return "\n ".join(keys) + "\n " + "\n ".join(abs)
-#
-
-import os
-for filename in os.listdir("./new_books/06. Oknyomozás, életrajz/"):
-    f = os.path.join("./new_books/06. Oknyomozás, életrajz/", filename)
-    if not filename.endswith("txt"):
-        continue
-    with open(f, "r", encoding='utf-8') as input:
-        content = input.read()
-        keys = CollectNames2(content, "./new_books/06. Oknyomozás, életrajz/dict/dict_" + filename, "./big_dict.txt")
-
-# with open("./09 doberdo_isonzo_tirol.txt", "r", encoding='utf-8') as input:
-#     content = input.read()
-#     keys = CollectNames2(content, "dictimprove/output.txt", "./big_dict.txt")
-#
