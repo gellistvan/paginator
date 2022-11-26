@@ -22,10 +22,14 @@ def init_speaker() :
     return speaker
 
 def GetMediaLen(path):
+    startupinfo = subprocess.STARTUPINFO()
+    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    startupinfo.wShowWindow = subprocess.SW_HIDE
+
     command="./ffmpeg.exe -stats -i " + path + " -f null -"
 
     with open("stdout.txt","wb") as out, open("stderr.txt","wb") as err:
-        subprocess.call(command,stdout=out,stderr=err)
+        subprocess.call(command,stdout=out,stderr=err,startupinfo=startupinfo)
     seconds = 0
     with open("stderr.txt","r") as file1:
         Lines = file1.readlines()

@@ -11,16 +11,6 @@ from preprocess import *
 
 from threading import Thread
 
-def ExtractMusic(folder, filename, outfolder, temp_path):
-    command="./ffmpeg.exe -i \""+ folder + filename + ".mp4\" -map 0:a -c copy " + outfolder + filename + ".m4a"
-
-    with open(temp_path + "thread_stdout.txt", "wb") as out, open(temp_path + "thread_stdout.txt", "wb") as err:
-        subprocess.call(command,stdout=out,stderr=err)
-
-def utc_timestamp():
-    dt = datetime.datetime.now(timezone.utc)
-    utc_time = dt.replace(tzinfo=timezone.utc)
-    return utc_time.timestamp()
 
 class BookKeeper:
     temp_path = ''
@@ -47,12 +37,16 @@ class BookKeeper:
     trigger_sleep = False
     starttime = 0
     video_chapter_generating_process: subprocess.Popen = None
+    _startupinfo = subprocess.STARTUPINFO()
 
     temp_folder_path: str
     PREVIEW_FILENAME = "preview.wav"
     SPEECH_PREVIEW_FILENAME = "speech_preview.wav"
 
     def __init__(self):
+        self._startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        self._startupinfo.wShowWindow = subprocess.SW_HIDE
+
         self.temp_folder_path = os.path.expandvars("%TEMP%") + "\\book_keeper"
         if not os.path.isdir(self.temp_folder_path):
             try:
@@ -61,9 +55,20 @@ class BookKeeper:
                 print(e, file=sys.stderr)
                 self.temp_folder_path = "."
 
+    def ExtractMusic(self, folder, filename, outfolder, temp_path):
+        command = "./ffmpeg.exe -i \"" + folder + filename + ".mp4\" -map 0:a -c copy " + outfolder + filename + ".m4a"
+
+        with open(temp_path + "thread_stdout.txt", "wb") as out, open(temp_path + "thread_stdout.txt", "wb") as err:
+            subprocess.call(command, stdout=out, stderr=err, startupinfo=self._startupinfo)
+
+    def utc_timestamp(self):
+        dt = datetime.datetime.now(timezone.utc)
+        utc_time = dt.replace(tzinfo=timezone.utc)
+        return utc_time.timestamp()
+
     def ReportProgress(self):
         percent = int(100*(self.progress + self.subprogress * self.actualstep))
-        time_remaining = 0 if percent == 0 else (100-percent)*((utc_timestamp() - self.starttime) / percent)
+        time_remaining = 0 if percent == 0 else (100-percent)*((self.utc_timestamp() - self.starttime) / percent)
 
         if self.set_progress_bar_callback is not None:
             self.set_progress_bar_callback(percent, time_remaining)
@@ -74,7 +79,7 @@ class BookKeeper:
         command="./ffmpeg.exe -stats -i \"" + self.temp_path + name + ".mp3\" -f null -"
 
         with open(self.temp_path + "stdout.txt", "wb") as out, open(self.temp_path + "stderr.txt", "wb") as err:
-            subprocess.call(command,stdout=out,stderr=err)
+            subprocess.call(command, stdout=out, stderr=err, startupinfo=self._startupinfo)
         seconds=0
 
         with open(self.temp_path + "stderr.txt", "r") as file1:
@@ -86,10 +91,10 @@ class BookKeeper:
 
         rate = '1' if seconds < 150 else '0.5'
         command="./ffmpeg.exe -loop 1 -framerate 1 -i " + self.temp_path + "cover.png -i \"" + self.temp_path + name + ".mp3\" -i " + self.background_music + ".mp3 -ss 0 -t " + str(seconds) + " -filter_complex amix=inputs=2:duration=longest:weights=\"" + self.music_weight + "\" -c:v libx264 -r " + rate + " -threads " + str(self.CPUs) + " -movflags +faststart \"" + self.video_path + name + ".mp4\""
-        subprocess.call(command)
+        subprocess.call(command, startupinfo=self._startupinfo)
         rate = '1' if seconds < 150 else '0.1'
         command="./ffmpeg.exe -loop 1 -framerate 1 -i " + self.music_path + "cover.png -i \"" + self.music_path + name + ".mp3\" -i " + self.background_music + ".mp3 -ss 0 -t " + str(seconds) + " -filter_complex amix=inputs=2:duration=longest:weights=\"" + self.music_weight + "\" -c:v libx264 -r " + rate + " -threads " + str(self.CPUs) + " -movflags +faststart \"" + self.video_path + name + ".mp4\""
-        self.video_chapter_generating_process = subprocess.Popen(command)
+        self.video_chapter_generating_process = subprocess.Popen(command, startupinfo=self._startupinfo)
         self.video_chapter_generating_process.communicate()
         self.video_chapter_generating_process = None
 
@@ -137,7 +142,7 @@ class BookKeeper:
         if os.path.isfile(self.background_music):
             command = "./ffmpeg.exe -y -i \"" + SPEECH_PREVIEW_PATH + "\" -ss 15 -i \"" + self.background_music + "\" " \
                       + "-filter_complex amix=inputs=2:duration=shortest:weights=\"" + self.music_weight + "\" -f wav " + self.temp_folder_path + "\\" + self.PREVIEW_FILENAME
-            completed_proc = subprocess.run(command)
+            completed_proc = subprocess.run(command, startupinfo=self._startupinfo)
 
             if completed_proc.returncode == 0:
                 result_path = self.temp_folder_path + "\\" + self.PREVIEW_FILENAME
@@ -152,7 +157,7 @@ class BookKeeper:
             self.video_chapter_generating_process = None
 
     def Execute(self):
-        self.starttime = utc_timestamp()
+        self.starttime = self.utc_timestamp()
         self.music_path = self.output_path + "/mp3/"
         self.temp_path = self.output_path + "/tmp/"
 
@@ -183,7 +188,7 @@ class BookKeeper:
                 if self.image_path != '' and self.background_music != '':
                     shutil.copyfile(self.image_path, self.temp_path + "cover.png")
                     self.GenerateMP4(filename)
-                    ExtractMusic(self.video_path, filename, self.music_path, self.temp_path)
+                    self.ExtractMusic(self.video_path, filename, self.music_path, self.temp_path)
 
                 self.progress = 1
                 self.ReportProgress()
@@ -223,7 +228,7 @@ class BookKeeper:
                     self.GenerateMP4(name)
                     self.sumlen = self.CheckPartLength(name, self.sumlen)
 
-                    thread = Thread(target=ExtractMusic(self.video_path, name, self.music_path, self.temp_path))
+                    thread = Thread(target=self.ExtractMusic(self.video_path, name, self.music_path, self.temp_path))
                     thread.start()
 
                 index += 1
@@ -237,7 +242,7 @@ class BookKeeper:
         self.actualstep = 1.0
         self.ReportProgress()
         command="./ffmpeg.exe -f concat -i " + self.output_path + "/list.txt -c copy " + self.output_path + "/output.mp4"
-        subprocess.call(command)
+        subprocess.call(command, startupinfo=self._startupinfo)
         shutil.move(self.output_path + "/list.txt", self.temp_path + "list.txt")
         shutil.rmtree(self.temp_path)
         self.progress = 1.0
