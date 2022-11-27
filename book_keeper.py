@@ -91,9 +91,6 @@ class BookKeeper:
 
         rate = '1' if seconds < 150 else '0.5'
         command="./ffmpeg.exe -loop 1 -framerate 1 -i " + self.temp_path + "cover.png -i \"" + self.temp_path + name + ".mp3\" -i " + self.background_music + ".mp3 -ss 0 -t " + str(seconds) + " -filter_complex amix=inputs=2:duration=longest:weights=\"" + self.music_weight + "\" -c:v libx264 -r " + rate + " -threads " + str(self.CPUs) + " -movflags +faststart \"" + self.video_path + name + ".mp4\""
-        subprocess.call(command, startupinfo=self._startupinfo)
-        rate = '1' if seconds < 150 else '0.1'
-        command="./ffmpeg.exe -loop 1 -framerate 1 -i " + self.music_path + "cover.png -i \"" + self.music_path + name + ".mp3\" -i " + self.background_music + ".mp3 -ss 0 -t " + str(seconds) + " -filter_complex amix=inputs=2:duration=longest:weights=\"" + self.music_weight + "\" -c:v libx264 -r " + rate + " -threads " + str(self.CPUs) + " -movflags +faststart \"" + self.video_path + name + ".mp4\""
         self.video_chapter_generating_process = subprocess.Popen(command, startupinfo=self._startupinfo)
         self.video_chapter_generating_process.communicate()
         self.video_chapter_generating_process = None
