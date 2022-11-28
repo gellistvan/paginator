@@ -3,7 +3,7 @@
 
 $bundle_folder = ".\dist\book_keeper_window\"
 
-pyinstaller .\book_keeper_window.pyw
+pyinstaller --icon=".\assets\icons\icons8-audio-book-50.ico" .\book_keeper_window.pyw
 
 if ($?)
 {
