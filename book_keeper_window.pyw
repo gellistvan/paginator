@@ -239,7 +239,7 @@ class BookKeeperWindow(tk.Tk):
         self._process_button = ttk.Button(process_control_frame, text="Process", command=self.on_process_button_pressed)
         self._process_button.pack(fill=tk.Y, padx=4, side=tk.RIGHT)
 
-        def show_about_window(): tk.messagebox.showinfo(self._APP_NAME, self._APP_NAME + " " + self._APP_VERSION + "\nAuthor: István Gellai")
+        def show_about_window(): tk.messagebox.showinfo(self._APP_NAME, self._APP_NAME + " " + self._APP_VERSION + "\nAuthors: István Gellai, Olivér Megyeri")
         self._about_button = ttk.Button(process_control_frame, text="About", command=show_about_window)
         self._about_button.pack(fill=tk.Y, padx=4, side=tk.LEFT)
 
