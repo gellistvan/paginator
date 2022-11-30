@@ -34,6 +34,9 @@ Source: "C:\Users\megyeri_oliver\projects\paginator\dist\book_keeper_window\{#My
 Source: "C:\Users\megyeri_oliver\projects\paginator\dist\book_keeper_window\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
+[Dirs]
+Name: "{%TEMP}\book_keeper"
+
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
