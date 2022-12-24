@@ -111,6 +111,10 @@ def replace_dates(text):
     text = text.replace(" nov.", " november")
     text = text.replace(" dec.", " december")
     text = text.replace(" Sir ", " szőr ")
+    text = re.sub(r"(\s)dr\. ", r"\rdoktor ", text)
+    text = re.sub(r"(\s)Dr\. ", r"\rdoktor ", text)
+    text = re.sub(r"(\s)Mr\. ", r"\rmiszter ", text)
+    text = re.sub(r"(\s)Mrs\. ", r"\rmiszisz ", text)
     return text
 
 def replace_uinits(text):
@@ -153,29 +157,30 @@ def replace_uinits(text):
     return text
 
 def replace_math(text):
+    text = re.sub(r"(\d+)-(\d+)(.{0,8}) között", r"\1 és \2\3 között", text)
+    text = re.sub(r"(\d+)–(\d+)(.{0,8}) között", r"\1 és \2\3 között", text)
     text = re.sub(r"(\d+) *\+ *(\d+)", r"\1 plusz \2" ,text)
-    text = re.sub(r"(\d+) *- *(\d+)", r"\1 mínusz \2" ,text)
     text = re.sub(r"(\d+) *\* *(\d+)", r"\1 szorozva \2" ,text)
     text = re.sub(r"(\d+) */ *(\d+)", r"\1 per \2" ,text)
     text = re.sub(r"(\d+) *= *(\d+)", r"\1 egyenlő \2" ,text)
     text = re.sub(r"(\d+),5 ", r"\1 és fél ", text)
-    text = re.sub(r"(\d+)\,(\d+)%", r"\1,\2 százalék", text)
-    text = re.sub(r"(\d+)\,(\d) ", r"\1 egész \2 tized ", text)
-    text = re.sub(r"(\d+)\,(\d\d) ", r"\1 egész \2 század ", text)
-    text = re.sub(r"(\d+)\,(\d\d\d) ", r"\1 egész \2 ezred ", text)
+    text = re.sub(r"(\d+),(\d+)%", r"\1,\2 százalék", text)
+    text = re.sub(r"(\d+),(\d) ", r"\1 egész \2 tized ", text)
+    text = re.sub(r"(\d+),(\d\d) ", r"\1 egész \2 század ", text)
+    text = re.sub(r"(\d+),(\d\d\d) ", r"\1 egész \2 ezred ", text)
     text = re.sub(r"(\d) (\d{3}) ", r"\1\2", text)
     text = re.sub(r"(\d) (\d{3}) ", r"\1\2", text)
     text = re.sub(r"(\d) (\d{3}) ", r"\1\2", text)
-    text = re.sub(r"(\d)\.(\d{3})([ \.])", r"\1\2\3", text)
-    text = re.sub(r"(\d)\.(\d{3})([ \.])", r"\1\2\3", text)
-    text = re.sub(r"(\d)\.(\d{3})([ \.])", r"\1\2\3", text)
+    text = re.sub(r"(\d)\.(\d{3})([ .])", r"\1\2\3", text)
+    text = re.sub(r"(\d)\.(\d{3})([ .])", r"\1\2\3", text)
+    text = re.sub(r"(\d)\.(\d{3})([ .])", r"\1\2\3", text)
     text = re.sub(r"([\r\n])\d+[\r\n]", r"\1", text)
+    text = re.sub(r"(\d)-(\d+)", r"\1 - \2", text)
+    text = re.sub(r"(\d)–(\d+)", r"\1 - \2", text)
     return text
 
 def preprocess(text):
-    text = re.sub(r"(\d)\-(\d+)", r"\1 - \2", text)
-    text = re.sub(r"(\d)–(\d+)", r"\1 - \2", text)
-    text = re.sub(r"\[\d+\]", r"", text)
+    text = re.sub(r"\[\d+]", r"", text)
     text = re.sub(r"(\r\n)+", r"\r\n", text)
     text = re.sub(r"(\d) (\d{3})([\\., :?!%])", r"\1\2\3", text, 2)
     text = re.sub(r"(\d) (\d{3})([\\., :?!%])", r"\1\2\3", text, 2)
@@ -195,10 +200,10 @@ def preprocess(text):
     text = re.sub(r"\r\n\s*\d+\s*\r\n", r"\r\n", text)
     text = replace_dates(text)
     text = replace_roman(text)
-    text = replace_math(text)
-    text = re.sub(r"\[\d+\]", "", text)
-    text = re.sub(r"\{\d+\}", "", text)
     text = replace_uinits(text)
+    text = replace_math(text)
+    text = re.sub(r"\[\d+]", "", text)
+    text = re.sub(r"{\d+}", "", text)
 
 
     return text
