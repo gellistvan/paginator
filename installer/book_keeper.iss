@@ -17,7 +17,7 @@ DisableProgramGroupPage=yes
 ; Remove the following line to run in administrative install mode (install for all users.)
 ;PrivilegesRequired=lowest
 OutputBaseFilename=book_keeper_installer
-SetupIconFile=c:\Users\megyeri_oliver\projects\paginator\installer\icons8-install-58.ico
+SetupIconFile=.\icons8-install-58.ico
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
@@ -30,8 +30,8 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "C:\Users\megyeri_oliver\projects\paginator\dist\book_keeper_window\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\megyeri_oliver\projects\paginator\dist\book_keeper_window\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\dist\book_keeper_window\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\book_keeper_window\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Dirs]
