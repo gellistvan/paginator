@@ -62,3 +62,7 @@ Root: HKLM; Subkey: "SOFTWARE\Microsoft\Speech\Voices\Tokens\MSTTS_V110_hu-HU_Sz
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
+[UninstallDelete]
+Type: files; Name: "{%TEMP}\book_keeper\preview.wav"
+Type: files; Name: "{%TEMP}\book_keeper\speech_preview.wav"
+
