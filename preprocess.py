@@ -197,7 +197,7 @@ def preprocess(text):
     text = re.sub(r"i\.e\.", "időszámításunk előtt", text)
     text = re.sub(r"i\. e\.", "időszámításunk előtt", text)
     text = re.sub(r"(\d+)\. (jan|feb|márc|ápr|máj|jún|júl|aug|szept|okt|nov|dec)", r"\1 \2", text)
-    text = re.sub(r"\r\n\s*\d+\s*\r\n", r"\r\n", text)
+    #text = re.sub(r"\r\n\s*\d+\s*\r\n", r"\r\n", text)
     text = replace_dates(text)
     text = replace_roman(text)
     text = replace_uinits(text)

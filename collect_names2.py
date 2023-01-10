@@ -93,6 +93,8 @@ def BuildDictionary(dictionary_path):
 
         for line in pronunciation:
             values = line.split('\t')
+            if len(values) < 2:
+                print("ERROR" + line)
             values = list(map(lambda c: c.lstrip(), values))
             found = False
             if " " in values[0] and " " in values[1]:

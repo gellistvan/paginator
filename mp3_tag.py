@@ -3,6 +3,7 @@ import music_tag
 
 
 input_path='./new_books_Copy/new_new_books/életmód/elhizas_jav/mp3/'
+input_path='./TARKI/mp3/'
 album_title=''
 author=''
 cover=input_path + 'cover.png'

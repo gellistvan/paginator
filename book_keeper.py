@@ -196,11 +196,16 @@ class BookKeeper:
                     pronunciation = dict_file.readlines()
                     dictionary = []
                     for line in pronunciation:
+                        print(line)
                         values = line.split('\t')
                         dictionary.append((values[0].lstrip(), values[1].rstrip()))
                     dictionary = sorted(sorted(dictionary), reverse=True, key=lambda var: len(var[0]))
                     for line in dictionary:
                         input_file = input_file.replace(line[0], line[1])
+                        if len(line[0]) > 3:
+                            mod_key = line[0][0].lower() + line[0][1:]
+                            input_file = input_file.replace(mod_key + 'i', line[1] + 'i')
+                            input_file = input_file.replace(mod_key + '-', line[1] + '-')
 
             self.sumchars = len(input_file)
             sections=input_file.split(self.chapter_delimiter)
