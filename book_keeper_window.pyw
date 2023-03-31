@@ -41,13 +41,15 @@ class BookKeeperWindow(tk.Tk):
     _progress_state_label: ttk.Label
     _process_button: ttk.Button
     _stop_button: ttk.Button
+    _about_button: ttk.Button
 
     _is_processing: bool
     _is_stop_processing_requested: bool
     _is_exit_requested: bool
     _kill_video_chapter_generating_process: Callable = None
 
-    _APP_NAME = "Book keeper"
+    _APP_NAME = "Book Keeper"
+    _APP_VERSION = "1.0"
 
     _filedialog_types = {
         "text": (("Text files: ", "*.txt"), ("All files: ", "*.*")),
@@ -89,7 +91,7 @@ class BookKeeperWindow(tk.Tk):
         self._book_path_entry.pack(fill=tk.X, expand=True, side=tk.LEFT, padx=2, ipady=1)
         self._book_path_entry.bind("<FocusOut>", self.show_estimation)
 
-        self._book_path_browse_button = ttk.Button(book_path_frame, text="Browse",
+        self._book_path_browse_button = ttk.Button(book_path_frame, text="Browse...",
                                                    command=lambda: self.on_file_browser_button_pressed("text", book_path_frame.book_path, self._book_path_entry))
         self._book_path_browse_button.pack(fill=tk.BOTH, expand=True, padx=2)
 
@@ -103,7 +105,7 @@ class BookKeeperWindow(tk.Tk):
         self._dictionary_path_entry = ttk.Entry(dictionary_path_frame, textvariable=dictionary_path_frame.dictionary_path)
         self._dictionary_path_entry.pack(fill=tk.X, expand=True, side=tk.LEFT, padx=2, ipady=1)
 
-        self._dictionary_path_browse_button = ttk.Button(dictionary_path_frame, text="Browse",
+        self._dictionary_path_browse_button = ttk.Button(dictionary_path_frame, text="Browse...",
                                                          command=lambda: self.on_file_browser_button_pressed("text", dictionary_path_frame.dictionary_path, self._dictionary_path_entry))
         self._dictionary_path_browse_button.pack(fill=tk.BOTH, expand=True, padx=2)
 
@@ -148,7 +150,7 @@ class BookKeeperWindow(tk.Tk):
         self._cover_path_entry = ttk.Entry(cover_path_frame, textvariable=cover_path_frame.cover_path)
         self._cover_path_entry.pack(fill=tk.X, expand=True, side=tk.LEFT, padx=2, ipady=1)
 
-        self._cover_path_browse_button = ttk.Button(cover_path_frame, text="Browse",
+        self._cover_path_browse_button = ttk.Button(cover_path_frame, text="Browse...",
                                                     command=lambda: self.on_file_browser_button_pressed("picture", cover_path_frame.cover_path, self._cover_path_entry))
         self._cover_path_browse_button.pack(fill=tk.BOTH, expand=True, padx=2)
 
@@ -163,7 +165,7 @@ class BookKeeperWindow(tk.Tk):
         self._background_music_path_entry.pack(fill=tk.X, expand=True, side=tk.LEFT, padx=2, ipady=1)
 
         self._background_music_path_browse_button\
-            = ttk.Button(background_music_path_frame, text="Browse",
+            = ttk.Button(background_music_path_frame, text="Browse...",
                          command=lambda: self.on_file_browser_button_pressed("audio", background_music_path_frame.background_music_path, self._background_music_path_entry))
         self._background_music_path_browse_button.pack(fill=tk.Y, padx=2, side=tk.LEFT)
 
@@ -206,7 +208,7 @@ class BookKeeperWindow(tk.Tk):
         self._output_path_entry = ttk.Entry(output_path_frame, textvariable=output_path_frame.output_path)
         self._output_path_entry.pack(fill=tk.X, expand=True, side=tk.LEFT, padx=2, ipady=1)
 
-        self._output_path_browse_button = ttk.Button(output_path_frame, text="Browse",
+        self._output_path_browse_button = ttk.Button(output_path_frame, text="Browse...",
                                                      command=lambda: self.on_folder_browser_button_pressed(output_path_frame.output_path, self._output_path_entry))
         self._output_path_browse_button.pack(fill=tk.BOTH, expand=True, padx=2)
 
@@ -236,6 +238,12 @@ class BookKeeperWindow(tk.Tk):
 
         self._process_button = ttk.Button(process_control_frame, text="Process", command=self.on_process_button_pressed)
         self._process_button.pack(fill=tk.Y, padx=4, side=tk.RIGHT)
+
+        def show_about_window():
+            MSG = self._APP_NAME + "\n\nVersion: " + self._APP_VERSION + "\nAuthors: István Gellai, Olivér Megyeri"
+            tk.messagebox.showinfo("About " + self._APP_NAME, MSG)
+        self._about_button = ttk.Button(process_control_frame, text="About", command=show_about_window)
+        self._about_button.pack(fill=tk.Y, padx=4, side=tk.LEFT)
 
     def on_file_browser_button_pressed(self, file_type: str, path: tk.StringVar, entry: ttk.Entry):
         filename = filedialog.askopenfilename(filetypes=self._filedialog_types[file_type])
@@ -386,6 +394,7 @@ class BookKeeperWindow(tk.Tk):
         self._output_path_entry.config(state=state)
         self._output_path_browse_button.config(state=state)
         self._process_button.config(state=state)
+        self._about_button.config(state=state)
 
     def show_estimation(self, event=None):
         label_text = "Estimated video length and size: "

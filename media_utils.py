@@ -22,20 +22,26 @@ def init_speaker() :
     return speaker
 
 def GetMediaLen(path):
-    command="./ffmpeg.exe -stats -i " + path + " -f null -"
+    dir_path = os.path.dirname(path) + "/"
+    startupinfo = subprocess.STARTUPINFO()
+    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    startupinfo.wShowWindow = subprocess.SW_HIDE
 
-    with open("stdout.txt","wb") as out, open("stderr.txt","wb") as err:
-        subprocess.call(command,stdout=out,stderr=err)
+    command = "./ffmpeg.exe -stats -i " + path + " -f null -"
+    with open(dir_path+"stdout.txt", "wb") as out, open(dir_path+"stderr.txt", "wb") as err:
+        subprocess.call(command, stdout=out, stderr=err, startupinfo=startupinfo)
+
     seconds = 0
-    with open("stderr.txt","r") as file1:
-        Lines = file1.readlines()
-        for line in Lines:
-            if ("Duration:" in line):
-                times=line.split()[1].split('.')[0].split(":")
-                seconds=int(times[0])*3600 + int(times[1])*60+int(times[2])
+    with open(dir_path+"stderr.txt", "r") as file1:
+        lines = file1.readlines()
+        for line in lines:
+            if "Duration:" in line:
+                times = line.split()[1].split('.')[0].split(":")
+                seconds = int(times[0])*3600 + int(times[1])*60+int(times[2])
 
-    os.remove("stdout.txt")
-    os.remove("stderr.txt")
+    os.remove(dir_path+"stdout.txt")
+    os.remove(dir_path+"stderr.txt")
+
     return seconds
 
 def AppendtoFile(path, string):
